@@ -24,7 +24,13 @@ class BigInteger
 
     friend BigInteger operator+(const BigInteger &lhs, const BigInteger &rhs);
     friend BigInteger operator-(const BigInteger &lhs, const BigInteger &rhs);
+    friend BigInteger operator*(const BigInteger &lhs, const BigInteger &rhs);
     // friend BigInteger operator+(const BigInteger &lhs, const int rhs);
+
+    friend bool operator==(const BigInteger &lhs, const BigInteger &rhs);
+    friend bool operator!=(const BigInteger &lhs, const BigInteger &rhs);
+
+
 
 public:
     // constructors
@@ -45,6 +51,7 @@ public:
     BigInteger(int64_t num){
         if (num == 0) {
             digits_of_BN.push_back(0);
+            first_sign_is_negative = false;
         } else if (num == -0) {
             // -0 is equal to 0, example: -000 -> 0
             digits_of_BN.push_back(0);
@@ -130,9 +137,10 @@ public:
         // add -0 check
     }
 
-    // BigInteger operator*() const {
-    //     return *this;
-    // }
+    BigInteger operator*() const {
+        return *this;
+    }
+
 
 
 
@@ -180,13 +188,13 @@ public:
             
             int carry = 0;
             for (size_t i = 0; i < max_size || carry; ++i) {
-                if (i == digits_of_BN.size()) {
+                if (i == digits_of_BN.size()) 
                     digits_of_BN.push_back(0);
-                }
+                
                 int sum = carry + digits_of_BN[i];
-                if (i < rhs.digits_of_BN.size()) {
+                if (i < rhs.digits_of_BN.size())
                     sum += rhs.digits_of_BN[i];
-                }
+                
                 digits_of_BN[i] = sum % 10;
                 carry = sum / 10;
             }
@@ -217,8 +225,9 @@ public:
             BigInteger temp_rhs = rhs;       // Create a non-const copy
             BigInteger temp_this = *this;    // Create a copy of *this
             temp_rhs.first_sign_is_negative = false; // temp_this -> +
+            /*TEST */ // std::cout << "case 4: " << *this << "and " << temp_rhs << std::endl;
+
             *this = temp_rhs + temp_this;
-            std::cout << "case 4: " << *this << "and " << temp_rhs << std::endl;
             return *this;
         }
 
@@ -255,7 +264,52 @@ public:
         normalize();
         return *this;
     }
-    BigInteger& operator*=(const BigInteger& rhs);
+
+    BigInteger& operator*=(const BigInteger& rhs){
+        // Implementation of the multiplication
+
+        if (rhs.digits_of_BN[0] == 0) {
+            digits_of_BN.clear();
+            digits_of_BN.push_back(0);
+
+            first_sign_is_negative = false;
+            return *this;
+        } else if (rhs.digits_of_BN[0] == 1) {
+            return *this;
+        }
+
+        if (digits_of_BN[0] == 0) {
+            first_sign_is_negative = false;
+            return *this;
+        } else if (digits_of_BN[0] == 1) {
+            *this = rhs;
+            return *this;
+        }
+
+        // Multiplaing the numbers
+
+
+        bool result_is_negative = first_sign_is_negative != rhs.first_sign_is_negative;
+        BigInteger original = *this;
+        BigInteger result("0");
+        
+        // Convert rhs to positive number for counting
+        BigInteger counter = rhs;
+        counter.first_sign_is_negative = false;
+        
+        // Multiply by repeated addition
+        while (counter != BigInteger("0")) {
+            result += original;
+            counter -= BigInteger("1");
+        }
+        
+        // Set result
+        *this = result;
+        first_sign_is_negative = result_is_negative;
+        
+        return *this;
+
+    }
     BigInteger& operator/=(const BigInteger& rhs);
     BigInteger& operator%=(const BigInteger& rhs);
 
@@ -309,8 +363,11 @@ inline std::ostream &operator<<(std::ostream &lhs, const BigInteger &rhs) {
         lhs << '+';
     }
 
+    // rbegin form the end, rend iterator to the begin
+    //https://www.geeksforgeeks.org/vector-rbegin-and-rend-function-in-c-stl/
+    //https://en.cppreference.com/w/cpp/iterator/rbegin
     for (auto it = rhs.digits_of_BN.rbegin(); it != rhs.digits_of_BN.rend(); ++it) {
-        lhs << static_cast<char>(*it + '0');
+        lhs << static_cast<char>(*it + '0'); // get number -> char -> add to stream
     }
 
   //lhs << rhs.to_string();
@@ -318,29 +375,63 @@ inline std::ostream &operator<<(std::ostream &lhs, const BigInteger &rhs) {
 }
 
 inline BigInteger operator+(const BigInteger& lhs, const BigInteger& rhs) {
-    std::cout << "operator+(const BigInteger& lhs, const BigInteger& rhs)" << std::endl;
-    std::cout << "lhs: " << lhs << std::endl;
-    std::cout << "rhs: " << rhs << std::endl;
+    /*TEST */ //
+    // std::cout << "operator+(const BigInteger& lhs, const BigInteger& rhs)" << std::endl;
+    // std::cout << "lhs: " << lhs << std::endl;
+    // std::cout << "rhs: " << rhs << std::endl;
     BigInteger result = lhs;    // Make a copy
     result += rhs;              // Add using operator+=
     return result;
 }
 
 inline BigInteger operator-(const BigInteger& lhs, const BigInteger& rhs) {
+    /*TEST */ //
+    // std::cout << "operator+(const BigInteger& lhs, const BigInteger& rhs)" << std::endl;
+    // std::cout << "lhs: " << lhs << std::endl;
+    // std::cout << "rhs: " << rhs << std::endl;
     BigInteger result = lhs;
     result -= rhs;
     return result;
 }
 
-inline BigInteger operator*(BigInteger lhs, const BigInteger& rhs);
+inline BigInteger operator*(const BigInteger& lhs, const BigInteger& rhs){
+    /*TEST */ //
+    // std::cout << "operator*(const BigInteger& lhs, const BigInteger& rhs)" << std::endl;
+    // std::cout << "lhs: " << lhs << std::endl;
+    // std::cout << "rhs: " << rhs << std::endl;
+    BigInteger result = lhs;
+    result *= rhs;
+    return result;
+}
+
+
 inline BigInteger operator/(BigInteger lhs, const BigInteger& rhs);
 inline BigInteger operator%(BigInteger lhs, const BigInteger& rhs);
 
 // alternatively you can implement 
 // std::strong_ordering operator<=>(const BigInteger& lhs, const BigInteger& rhs);
 // idea is, that all comparison should work, it is not important how you do it
-inline bool operator==(const BigInteger& lhs, const BigInteger& rhs);
-inline bool operator!=(const BigInteger& lhs, const BigInteger& rhs);
+//inline bool operator==(const BigInteger& lhs, const BigInteger& rhs); 
+inline bool operator==(const BigInteger& lhs, const BigInteger& rhs){
+    if (rhs.digits_of_BN.size() == 1 && lhs.digits_of_BN.size() == 1 && rhs.digits_of_BN[0] == 0 && lhs.digits_of_BN[0] == 0)
+        return true;
+
+    if (lhs.first_sign_is_negative != rhs.first_sign_is_negative) 
+        return false;
+
+    if (lhs.digits_of_BN.size() != rhs.digits_of_BN.size())
+        return false;
+
+    // for (size_t i = 0; i < lhs.digits_of_BN.size(); i++)
+    //     if (lhs.digits_of_BN[i] != rhs.digits_of_BN[i])
+    //         return false;
+    return lhs.digits_of_BN == rhs.digits_of_BN;
+}
+
+inline bool operator!=(const BigInteger& lhs, const BigInteger& rhs) { 
+    return !(lhs == rhs); 
+}
+
 inline bool operator<(const BigInteger& lhs, const BigInteger& rhs);
 inline bool operator>(const BigInteger& lhs, const BigInteger& rhs);
 inline bool operator<=(const BigInteger& lhs, const BigInteger& rhs);

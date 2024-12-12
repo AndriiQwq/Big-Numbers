@@ -1,36 +1,40 @@
 #include <iostream>
 #include "Big_Numbers.hpp"
 
-int main(){
-    //std::string str = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
+void test_multiplication() {
+    std::cout << "\n=== Basic Multiplication Tests ===\n";
+    
+    // Test 1: Simple positive numbers
+    BigInteger a("12");
+    BigInteger b("34");
+    std::cout << "Simple multiplication: " << (a * b == BigInteger("408") ? "PASS" : "FAIL")
+              << " (12 * 34 = " << a * b << ")\n";
 
-    // BigInteger Big_Numbers();
-    // std::cout << Big_Numbers << std::endl;
+    // Test 2: Multiplication by zero
+    BigInteger c("123");
+    BigInteger zero("0");
+    std::cout << "Multiply by zero: " << (c * zero == zero ? "PASS" : "FAIL")
+              << " (123 * 0 = " << c * zero << ")\n";
 
-    BigInteger int_big_num1(-000100);
-    //std::cout << int_big_num1 << '\n';
+    // Test 3: Negative numbers
+    BigInteger d("-5");
+    BigInteger e("7");
+    std::cout << "Negative multiplication: " << (d * e == BigInteger("-35") ? "PASS" : "FAIL")
+              << " (-5 * 7 = " << d * e << ")\n";
 
-    BigInteger int_big_num2(543545);
-    //std::cout << int_big_num2 << '\n';
+    // Test 4: Two negative numbers
+    BigInteger f("-3");
+    BigInteger g("-4");
+    std::cout << "Negative * negative: " << (f * g == BigInteger("12") ? "PASS" : "FAIL")
+              << " (-3 * -4 = " << f * g << ")\n";
+}
 
-    BigInteger big_num1("000435445454545454553455454554543545345354543534534543545");
-    //std::cout << big_num1 << '\n';
-
-    BigInteger big_num2("-0");
-
-    BigInteger big_num3("-1");
-
-    std::cout << big_num2 << "and " << big_num3 << '\n';
-
-    //std::cout << big_num2 - big_num3 << '\n';
-    std::cout << big_num2 - big_num3 << '\n';
-
-
-    int_big_num2 = big_num1;
-    // std::cout << int_big_num2 << '\n';
-
-    //test out 
-    //std::cout << int_big_num2 + big_num3 << '\n';
-    // std::cout << int_big_num2 + '1' << '\n';
-    // std::cout << int_big_num2 + 1 << '\n';
+int main() {
+    try {
+        test_multiplication();
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
 }
