@@ -23,6 +23,7 @@ class BigInteger
     friend std::ostream& operator<<(std::ostream& lhs, const BigInteger& rhs);
 
     friend BigInteger operator+(const BigInteger &lhs, const BigInteger &rhs);
+    friend BigInteger operator-(const BigInteger &lhs, const BigInteger &rhs);
     // friend BigInteger operator+(const BigInteger &lhs, const int rhs);
 
 public:
@@ -77,47 +78,33 @@ public:
 
         if (str[0] == '-') {
             if (str.size() == 1)
-                throw std::invalid_argument("Invalid string");
+                throw std::invalid_argument("Invalid num");
 
             first_sign_is_negative = true;
         } else if (str[0] == '+'){
             if (str.size() == 1)
-                throw std::invalid_argument("Invalid string");
+                throw std::invalid_argument("Invalid num");
 
             first_sign_is_negative = false;
-        } else {
+        } else { // without first sign + 
             first_sign_is_negative = false;
         }
 
         // Save the number string to the vector
         for (int i = str.size() - 1; i >= 0; i--) {
+            // skip thw first sign
             if (str[i] == '-' || str[i] == '+')
                 continue;
 
             if (!std::isdigit(str[i]))
-                throw std::invalid_argument("Invalid string");
+                throw std::invalid_argument("Invalid string, it's not a number or incorrect formated number");
 
-            // Convers chat to int 
+            // Convers char to int 
             digits_of_BN.push_back(str[i] - '0');
         }
 
-        // Remove leading zeros, example: 000123 -> 123, 000 -> 0
-        
-        while (digits_of_BN.size() > 1 && digits_of_BN.back() == 0) {
-            digits_of_BN.pop_back();
-        }
-
-        // example: -000 -> 0   
-        if  (digits_of_BN.size() == 1 && digits_of_BN[0] == 0)
-            first_sign_is_negative = false;
+        normalize();
     }
-
-
-
-
-
-
-
 
 
     // copy
@@ -135,13 +122,17 @@ public:
     //BigInteger operator-() const;
 
     BigInteger operator-() const {
-        BigInteger result = *this;
-        //if (result.digits_of_BN.size() > 1 || result.digits_of_BN[0] != 0) 
-        
+        // change the sign of the number
+        BigInteger result = *this;        
         result.first_sign_is_negative = !result.first_sign_is_negative;
         
         return result;
+        // add -0 check
     }
+
+    // BigInteger operator*() const {
+    //     return *this;
+    // }
 
 
 
@@ -149,9 +140,41 @@ public:
     // binary arithmetics operators
     
     BigInteger& operator+=(const BigInteger& rhs) {
-        // Если числа имеют одинаковые знаки
+        // it has 4 cases: 
+        // 1. + + + 
+        // 2. + + - -> sub + - + 
+        // 3. - + + -> sub +(2) - +(1)
+        // 4. - + -
+
+        // check 2 conditions: 
+        // if ( first_sign_is_negative && !rhs.first_sign_is_negative) {
+        //     rhs.first_sign_is_negative = true;
+        //     *this -= rhs;
+        //     return *this;
+        // } else if (!first_sign_is_negative && rhs.first_sign_is_negative) {
+        //     first_sign_is_negativ = true;
+        //     rhs -= *this;
+
+        //     *this = rhs;
+        //     return *this;
+        // // }
+
+        if (first_sign_is_negative && !rhs.first_sign_is_negative) {
+            // case 3
+            BigInteger temp_rhs = rhs;       // Create a non-const copy
+            BigInteger temp_this = *this;    // Create a copy of *this
+            temp_this.first_sign_is_negative = false; // temp_this -> +
+            *this = temp_rhs - temp_this;
+            return *this;
+        } else if (!first_sign_is_negative && rhs.first_sign_is_negative) {
+            // case 2
+            *this -= (-rhs);
+            return *this;
+        }
+
+        // num have the same signs, + + + or - + - -> addition
         if (first_sign_is_negative == rhs.first_sign_is_negative) {
-            // Сложение абсолютных значений
+            // adding 
             size_t max_size = std::max(digits_of_BN.size(), rhs.digits_of_BN.size());
             digits_of_BN.resize(max_size, 0);
             
@@ -167,49 +190,71 @@ public:
                 digits_of_BN[i] = sum % 10;
                 carry = sum / 10;
             }
-        } else {
-            // Вычитание для разных знаков
-            BigInteger abs_lhs = *this;
-            BigInteger abs_rhs = rhs;
-            abs_lhs.first_sign_is_negative = false;
-            abs_rhs.first_sign_is_negative = false;
-            
-            // Определяем большее по модулю число
-            bool this_is_larger = compare_abs(abs_lhs, abs_rhs) >= 0;
-            const BigInteger& larger = this_is_larger ? abs_lhs : abs_rhs;
-            const BigInteger& smaller = this_is_larger ? abs_rhs : abs_lhs;
-            
-            // Результат будет иметь знак большего по модулю числа
-            first_sign_is_negative = this_is_larger ? this->first_sign_is_negative : rhs.first_sign_is_negative;
-            
-            // Вычитание
-            digits_of_BN = larger.digits_of_BN;
-            int borrow = 0;
-            for (size_t i = 0; i < digits_of_BN.size(); ++i) {
-                int diff = digits_of_BN[i] - borrow - 
-                        (i < smaller.digits_of_BN.size() ? smaller.digits_of_BN[i] : 0);
-                if (diff < 0) {
-                    diff += 10;
-                    borrow = 1;
-                } else {
-                    borrow = 0;
-                }
-                digits_of_BN[i] = diff;
-            }
         }
 
-        // Нормализация результата
-        while (digits_of_BN.size() > 1 && digits_of_BN.back() == 0) {
-            digits_of_BN.pop_back();
-        }
-        if (digits_of_BN.size() == 1 && digits_of_BN[0] == 0) {
-            first_sign_is_negative = false;
-        }
+        normalize();
 
         return *this;
     }
 
-    BigInteger& operator-=(const BigInteger& rhs);
+    BigInteger& operator-=(const BigInteger& rhs) {
+        // it has 4 cases: 
+        // 1. + - + 
+        // 2. + - - -> add + + + 
+        // 3. - - + -> add - + - 
+        // 4. - - - -> sub +(2) - +(1)
+
+        if (!first_sign_is_negative && rhs.first_sign_is_negative) {
+            // case 2
+            *this += -rhs;
+            return *this;
+        } else if (first_sign_is_negative && !rhs.first_sign_is_negative) {
+            // case 3
+            *this += -rhs;
+            return *this;
+        } else if ( first_sign_is_negative && rhs.first_sign_is_negative) {
+            // case 4
+            BigInteger temp_rhs = rhs;       // Create a non-const copy
+            BigInteger temp_this = *this;    // Create a copy of *this
+            temp_rhs.first_sign_is_negative = false; // temp_this -> +
+            *this = temp_rhs + temp_this;
+            std::cout << "case 4: " << *this << "and " << temp_rhs << std::endl;
+            return *this;
+        }
+
+
+        // num have the same signs, + - + -> substraction
+        BigInteger lhs_num = *this;
+        BigInteger rhs_num = rhs;
+
+        // To return thre result with the larger number sign
+        bool this_is_larger = compare_abs(lhs_num, rhs_num) >= 0;
+        
+        const BigInteger& larger = this_is_larger ? lhs_num : rhs_num;
+        const BigInteger& smaller = this_is_larger ? rhs_num : lhs_num;
+        
+        digits_of_BN = larger.digits_of_BN;
+        first_sign_is_negative = this_is_larger ? first_sign_is_negative : !first_sign_is_negative;
+        
+        int borrow = 0; // borrow to the next digit
+        for (size_t i = 0; i < digits_of_BN.size(); ++i) {
+            int diff = digits_of_BN[i] - borrow;
+            if (i < smaller.digits_of_BN.size()) 
+                diff -= smaller.digits_of_BN[i];
+            
+            if (diff < 0) {
+                diff += 10;
+                borrow = 1;
+            } else {
+                borrow = 0;
+            }
+
+            digits_of_BN[i] = diff;
+        }
+        
+        normalize();
+        return *this;
+    }
     BigInteger& operator*=(const BigInteger& rhs);
     BigInteger& operator/=(const BigInteger& rhs);
     BigInteger& operator%=(const BigInteger& rhs);
@@ -232,16 +277,29 @@ private:
     bool first_sign_is_negative;
 
     static int compare_abs(const BigInteger& lhs, const BigInteger& rhs) {
-        if (lhs.digits_of_BN.size() != rhs.digits_of_BN.size()) {
+        // compare length of the numbers
+        if (lhs.digits_of_BN.size() != rhs.digits_of_BN.size())
             return lhs.digits_of_BN.size() < rhs.digits_of_BN.size() ? -1 : 1;
-        }
+        
         for (int i = lhs.digits_of_BN.size() - 1; i >= 0; --i) {
-            if (lhs.digits_of_BN[i] != rhs.digits_of_BN[i]) {
+            // step by step compare number signes
+            if (lhs.digits_of_BN[i] != rhs.digits_of_BN[i])
                 return lhs.digits_of_BN[i] < rhs.digits_of_BN[i] ? -1 : 1;
-            }
         }
+        // equal numbers
         return 0;
     }
+
+    void normalize() {
+        // Remove leading zeros, example: 000123 -> 123, 000 -> 0
+        while (digits_of_BN.size() > 1 && digits_of_BN.back() == 0)
+            digits_of_BN.pop_back();
+
+        // example: -000 -> 0   
+        if (digits_of_BN.size() == 1 && digits_of_BN[0] == 0)
+            first_sign_is_negative = false;
+    }
+
 };
 
 inline std::ostream &operator<<(std::ostream &lhs, const BigInteger &rhs) {
@@ -268,7 +326,12 @@ inline BigInteger operator+(const BigInteger& lhs, const BigInteger& rhs) {
     return result;
 }
 
-inline BigInteger operator-(BigInteger lhs, const BigInteger& rhs);
+inline BigInteger operator-(const BigInteger& lhs, const BigInteger& rhs) {
+    BigInteger result = lhs;
+    result -= rhs;
+    return result;
+}
+
 inline BigInteger operator*(BigInteger lhs, const BigInteger& rhs);
 inline BigInteger operator/(BigInteger lhs, const BigInteger& rhs);
 inline BigInteger operator%(BigInteger lhs, const BigInteger& rhs);
