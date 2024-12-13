@@ -1,37 +1,52 @@
-#include <iostream>
 #include "Big_Numbers.hpp"
+#include <iostream>
+#include <vector>
+#include <string>
 
-void test_multiplication() {
-    std::cout << "\n=== Basic Multiplication Tests ===\n";
-    
-    // Test 1: Simple positive numbers
-    BigInteger a("12");
-    BigInteger b("34");
-    std::cout << "Simple multiplication: " << (a * b == BigInteger("408") ? "PASS" : "FAIL")
-              << " (12 * 34 = " << a * b << ")\n";
 
-    // Test 2: Multiplication by zero
-    BigInteger c("123");
-    BigInteger zero("0");
-    std::cout << "Multiply by zero: " << (c * zero == zero ? "PASS" : "FAIL")
-              << " (123 * 0 = " << c * zero << ")\n";
+void test_divisions() {
+    struct DivisionTestCase {
+        std::string description;
+        BigInteger dividend;
+        BigInteger divisor;
+        BigInteger expected_quotient;
+    };
+    std::vector<DivisionTestCase> tests = {
+        {"Test 1: +123456789 / +12345", BigInteger("123456789"), BigInteger(12345), BigInteger(10000)},
+        {"Test 2: +987654321 / +123456789", BigInteger("987654321"), BigInteger(123456789), BigInteger(8)},
+        {"Test 3: -987654321 / +123456789", BigInteger("-987654321"), BigInteger(123456789), BigInteger(-8)},
+        {"Test 4: +987654321 / -123456789", BigInteger("987654321"), BigInteger(-123456789), BigInteger(-8)},
+        {"Test 5: -987654321 / -123456789", BigInteger("-987654321"), BigInteger(-123456789), BigInteger(8)},
+        {"Test 6: +1000000000 / +3", BigInteger("1000000000"), BigInteger(3), BigInteger(333333333)},
+        {"Test 7: -1000000000 / +3", BigInteger("-1000000000"), BigInteger(3), BigInteger(-333333333)},
+        {"Test 8: +1000000000 / -3", BigInteger("1000000000"), BigInteger(-3), BigInteger(-333333333)},
+        {"Test 9: -1000000000 / -3", BigInteger("-1000000000"), BigInteger(-3), BigInteger(333333333)},
+        {"Test 10: +0 / +123456789", BigInteger(0), BigInteger("123456789"), BigInteger(0)}
+    };
 
-    // Test 3: Negative numbers
-    BigInteger d("-5");
-    BigInteger e("7");
-    std::cout << "Negative multiplication: " << (d * e == BigInteger("-35") ? "PASS" : "FAIL")
-              << " (-5 * 7 = " << d * e << ")\n";
+    for (const auto& test : tests) {
+        try {
+            BigInteger quotient = test.dividend; // Создаём копию делимого
+            quotient /= test.divisor; // Выполняем деление
 
-    // Test 4: Two negative numbers
-    BigInteger f("-3");
-    BigInteger g("-4");
-    std::cout << "Negative * negative: " << (f * g == BigInteger("12") ? "PASS" : "FAIL")
-              << " (-3 * -4 = " << f * g << ")\n";
+            bool pass = (quotient == test.expected_quotient);
+            std::string status = pass ? "PASS" : "FAIL";
+
+            std::cout << test.description << " = " << quotient << " | " << status << "\n";
+        }
+        catch (const std::exception& e) {
+            // Обработка деления на ноль или других исключений
+            bool pass = (test.divisor == BigInteger(0));
+            std::string status = pass ? "PASS (Exception Caught)" : "FAIL (Unexpected Exception)";
+            std::cout << test.description << " threw exception: " << e.what() << " | " << status << "\n";
+        }
+    }
 }
 
 int main() {
     try {
-        test_multiplication();
+        test_divisions();
+        //test_division();
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

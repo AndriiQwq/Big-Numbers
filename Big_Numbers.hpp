@@ -25,10 +25,16 @@ class BigInteger
     friend BigInteger operator+(const BigInteger &lhs, const BigInteger &rhs);
     friend BigInteger operator-(const BigInteger &lhs, const BigInteger &rhs);
     friend BigInteger operator*(const BigInteger &lhs, const BigInteger &rhs);
+    friend BigInteger operator/(const BigInteger &lhs, const BigInteger &rhs);
+
     // friend BigInteger operator+(const BigInteger &lhs, const int rhs);
 
     friend bool operator==(const BigInteger &lhs, const BigInteger &rhs);
     friend bool operator!=(const BigInteger &lhs, const BigInteger &rhs);
+    friend bool operator<(const BigInteger &lhs, const BigInteger &rhs);
+    friend bool operator>(const BigInteger &lhs, const BigInteger &rhs);
+    friend bool operator<=(const BigInteger &lhs, const BigInteger &rhs);
+    friend bool operator>=(const BigInteger &lhs, const BigInteger &rhs);
 
 
 
@@ -70,9 +76,11 @@ public:
             else
                 temp = num;
 
+            int base = 10;
+
             while (temp > 0) {
-                digits_of_BN.push_back(temp % 10);
-                temp /= 10;
+                digits_of_BN.push_back(temp % base);
+                temp /= base;
             }
         }
     }
@@ -141,7 +149,8 @@ public:
         return *this;
     }
 
-
+    //     return *this;
+    // 
 
 
 
@@ -186,6 +195,7 @@ public:
             size_t max_size = std::max(digits_of_BN.size(), rhs.digits_of_BN.size());
             digits_of_BN.resize(max_size, 0);
             
+            int base = 10 ;
             int carry = 0;
             for (size_t i = 0; i < max_size || carry; ++i) {
                 if (i == digits_of_BN.size()) 
@@ -195,8 +205,8 @@ public:
                 if (i < rhs.digits_of_BN.size())
                     sum += rhs.digits_of_BN[i];
                 
-                digits_of_BN[i] = sum % 10;
-                carry = sum / 10;
+                digits_of_BN[i] = sum % base;
+                carry = sum / base;
             }
         }
 
@@ -245,6 +255,7 @@ public:
         digits_of_BN = larger.digits_of_BN;
         first_sign_is_negative = this_is_larger ? first_sign_is_negative : !first_sign_is_negative;
         
+        int base = 10;
         int borrow = 0; // borrow to the next digit
         for (size_t i = 0; i < digits_of_BN.size(); ++i) {
             int diff = digits_of_BN[i] - borrow;
@@ -252,7 +263,7 @@ public:
                 diff -= smaller.digits_of_BN[i];
             
             if (diff < 0) {
-                diff += 10;
+                diff += base;
                 borrow = 1;
             } else {
                 borrow = 0;
@@ -268,49 +279,132 @@ public:
     BigInteger& operator*=(const BigInteger& rhs){
         // Implementation of the multiplication
 
-        if (rhs.digits_of_BN[0] == 0) {
+        //error that it chack num 000645453..., and do first case
+        // solve
+        // check neec of normalize
+
+        // if (digits_of_BN[0] == 0 && digits_of_BN.size() != 1) 
+        //     normalize();
+        // else if (rhs.digits_of_BN[0] == 0 && rhs.digits_of_BN.size() == 1)
+        //     normalize();
+    
+
+        if (rhs.digits_of_BN[0] == 0 && rhs.digits_of_BN.size() == 1) {
             digits_of_BN.clear();
             digits_of_BN.push_back(0);
 
             first_sign_is_negative = false;
             return *this;
-        } else if (rhs.digits_of_BN[0] == 1) {
+        } else if (rhs.digits_of_BN[0] == 1 && rhs.digits_of_BN.size() == 1) {
             return *this;
         }
 
-        if (digits_of_BN[0] == 0) {
+        if (digits_of_BN[0] == 0 && digits_of_BN.size() == 1) {
             first_sign_is_negative = false;
             return *this;
-        } else if (digits_of_BN[0] == 1) {
+        } else if (digits_of_BN[0] == 1 && digits_of_BN.size() == 1) {
             *this = rhs;
             return *this;
         }
 
         // Multiplaing the numbers
-
-
-        bool result_is_negative = first_sign_is_negative != rhs.first_sign_is_negative;
-        BigInteger original = *this;
-        BigInteger result("0");
         
-        // Convert rhs to positive number for counting
-        BigInteger counter = rhs;
-        counter.first_sign_is_negative = false;
+        // Determine the first sign of the result of the multiplication
+        bool first_sign_of_multiplication = !(first_sign_is_negative == rhs.first_sign_is_negative);
         
-        // Multiply by repeated addition
-        while (counter != BigInteger("0")) {
-            result += original;
-            counter -= BigInteger("1");
+        // Standart base, number of digits in number system 0,1,2...9
+        const int base = 10;
+
+        //multiply(a[1..p], b[1..q], base)  // Operands containing rightmost digits at index 1
+        //product = [1..p+q]      // Allocate space for result
+        std::vector<uint8_t> product(digits_of_BN.size() + rhs.digits_of_BN.size(), 0);
+
+        //for b_i = 1 to q                     // for all digits in b
+        for (size_t i = 0; i < rhs.digits_of_BN.size(); i++) {
+            int carry = 0;
+            //for a_i = 1 to p            // for all digits in a
+            for ( size_t j = 0; j < digits_of_BN.size(); j++) {
+                int current_product = product[i + j] + carry + digits_of_BN[j] * rhs.digits_of_BN[i];
+                carry = current_product / base;
+                product[i + j] = current_product % base;
+            }
+
+            if (carry > 0)
+                product[i + digits_of_BN.size()] = carry;
+            // product
+            //     product[a_i + b_i - 1] += carry + a[a_i] * b[b_i] // -1 due to shift 0 index 
+            //     carry = product[a_i + b_i - 1] / base
+            //     product[a_i + b_i - 1] = product[a_i + b_i - 1] mod base
+            //     product[b_i + p] = carry                               // last digit comes from final carry
         }
-        
-        // Set result
-        *this = result;
-        first_sign_is_negative = result_is_negative;
-        
+        ///return product
+
+        first_sign_is_negative = first_sign_of_multiplication;
+        digits_of_BN = product;
+
+        normalize();
         return *this;
 
     }
-    BigInteger& operator/=(const BigInteger& rhs);
+    BigInteger& operator/=(const BigInteger& rhs){
+        // check normalization 
+        // if (digits_of_BN[0] == 0 && digits_of_BN.size() != 1) 
+        //     normalize();
+        // else if (rhs.digits_of_BN[0] == 0 && rhs.digits_of_BN.size() == 1)
+        //     normalize();
+
+        //check division by zer o
+        if (rhs.digits_of_BN.size() == 1 && rhs.digits_of_BN[0] == 0)
+            throw std::invalid_argument("Division by zero");
+
+        if (rhs.digits_of_BN.size() == 1 && rhs.digits_of_BN[0] == 1)
+            return *this;
+
+        // if (*this < rhs) {
+        //     digits_of_BN.clear();
+        //     digits_of_BN.push_back(0);
+        //     first_sign_is_negative = false;
+        //     return *this;
+        // } else if (*this == rhs) {
+        //     digits_of_BN.clear();
+        //     digits_of_BN.push_back(1);
+        //     first_sign_is_negative = !(first_sign_is_negative == rhs.first_sign_is_negative);
+        //     return *this;
+        // }
+
+
+        bool first_sign_after_dividion = !(first_sign_is_negative == rhs.first_sign_is_negative);
+
+        BigInteger dividend = *this;
+        BigInteger divisor = rhs;
+
+        dividend.first_sign_is_negative = false;
+        divisor.first_sign_is_negative = false;
+
+        BigInteger product;
+        product.digits_of_BN.resize(dividend.digits_of_BN.size(), 0);
+
+        BigInteger current;
+        for (int i = dividend.digits_of_BN.size() - 1; i >= 0; --i) {
+            if (current.digits_of_BN.size() == 1 && current.digits_of_BN[0] == 0) current.digits_of_BN.clear();
+            current.digits_of_BN.insert(current.digits_of_BN.begin(), dividend.digits_of_BN[i]);
+
+            int x = 0;
+            while (divisor * (x + 1) <= current)x++;
+            current = current - divisor * x;
+            product.digits_of_BN[i] = x;
+        }
+
+        product.normalize();
+        product.first_sign_is_negative = first_sign_after_dividion;
+
+        *this = product;
+        return *this;
+    }
+
+
+
+    
     BigInteger& operator%=(const BigInteger& rhs);
 
     // friend BigInteger operator+(BigInteger lhs, const BigInteger& rhs) {
@@ -405,8 +499,17 @@ inline BigInteger operator*(const BigInteger& lhs, const BigInteger& rhs){
 }
 
 
-inline BigInteger operator/(BigInteger lhs, const BigInteger& rhs);
-inline BigInteger operator%(BigInteger lhs, const BigInteger& rhs);
+inline BigInteger operator/(const BigInteger& lhs, const BigInteger& rhs) {
+    /*TEST */ //
+    // std::cout << "operator/(const BigInteger& lhs, const BigInteger& rhs)" << std::endl;
+    // std::cout << "lhs: " << lhs << std::endl;
+    // std::cout << "rhs: " << rhs << std::endl;
+    BigInteger result = lhs;
+    result /= rhs;
+    return result;
+}
+
+inline BigInteger operator%(const BigInteger& lhs, const BigInteger& rhs);
 
 // alternatively you can implement 
 // std::strong_ordering operator<=>(const BigInteger& lhs, const BigInteger& rhs);
@@ -432,10 +535,55 @@ inline bool operator!=(const BigInteger& lhs, const BigInteger& rhs) {
     return !(lhs == rhs); 
 }
 
-inline bool operator<(const BigInteger& lhs, const BigInteger& rhs);
-inline bool operator>(const BigInteger& lhs, const BigInteger& rhs);
-inline bool operator<=(const BigInteger& lhs, const BigInteger& rhs);
-inline bool operator>=(const BigInteger& lhs, const BigInteger& rhs);
+inline bool operator<(const BigInteger& lhs, const BigInteger& rhs) {
+    if (lhs.first_sign_is_negative && !rhs.first_sign_is_negative)
+        return true;
+    else if (!lhs.first_sign_is_negative && rhs.first_sign_is_negative)
+        return false;
+
+    // check the first sign of the numbers to their length, 4 cases: 
+
+    if ((lhs.first_sign_is_negative && rhs.first_sign_is_negative) && (lhs.digits_of_BN.size() > rhs.digits_of_BN.size()))
+        return true;
+    else if ((!lhs.first_sign_is_negative && !rhs.first_sign_is_negative) && (lhs.digits_of_BN.size() < rhs.digits_of_BN.size()))
+        return true;
+    else if ((lhs.first_sign_is_negative && rhs.first_sign_is_negative) && (lhs.digits_of_BN.size() < rhs.digits_of_BN.size()))
+        return false;
+    else if ((!lhs.first_sign_is_negative && !rhs.first_sign_is_negative) && (lhs.digits_of_BN.size() > rhs.digits_of_BN.size()))
+        return false;
+    
+    for (int i = lhs.digits_of_BN.size() - 1; i >= 0; --i)
+        if (lhs.digits_of_BN[i] != rhs.digits_of_BN[i]) {
+            if (lhs.first_sign_is_negative) {// cheke by the first sign 
+                return lhs.digits_of_BN[i] > rhs.digits_of_BN[i];
+            }else {
+                return lhs.digits_of_BN[i] < rhs.digits_of_BN[i];
+            }
+        }
+
+    return false;
+}
+
+inline bool operator>(const BigInteger& lhs, const BigInteger& rhs) {
+
+    if ( (lhs < rhs) && lhs != rhs)
+        return false;
+    else
+        return true;
+}
+
+inline bool operator<=(const BigInteger& lhs, const BigInteger& rhs) {
+    if (lhs < rhs || lhs == rhs)
+        return true;
+    else
+        return false;
+}
+inline bool operator>=(const BigInteger& lhs, const BigInteger& rhs) {
+    if (lhs > rhs || lhs == rhs)
+        return true;
+    else
+        return false;
+}
 
 
 #if SUPPORT_IFSTREAM == 1
