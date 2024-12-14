@@ -1,16 +1,13 @@
 #pragma once
 // here you can include whatever you want :)
-
-#include <iostream>   // For std::istream, std::ostream
-#include <vector>     // For std::vector
-#include <string>     // For std::string
-#include <cstdint>    // For int64_t, uint8_t
-#include <stdexcept>  // For std::invalid_argument
-#include <cctype>     // For std::isdigit
-
-// here you can include whatever you want :)
 #include <string>
 #include <stdint.h>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <cstdint> // int64_t, uint8_t
+#include <stdexcept> // invalid_argument
+#include <cctype> // isdigit
 
 // if you do not plan to implement bonus, you can delete those lines
 // or just keep them as is and do not define the macro to 1
@@ -20,15 +17,13 @@
 
 class BigInteger
 {
-    friend std::ostream& operator<<(std::ostream& lhs, const BigInteger& rhs);
+    friend std::ostream& operator<<(std::ostream &lhs, const BigInteger &rhs);
 
     friend BigInteger operator+(const BigInteger &lhs, const BigInteger &rhs);
     friend BigInteger operator-(const BigInteger &lhs, const BigInteger &rhs);
     friend BigInteger operator*(const BigInteger &lhs, const BigInteger &rhs);
     friend BigInteger operator/(const BigInteger &lhs, const BigInteger &rhs);
     friend BigInteger operator%(const BigInteger &lhs, const BigInteger &rhs);
-
-    // friend BigInteger operator+(const BigInteger &lhs, const int rhs);
 
     friend bool operator==(const BigInteger &lhs, const BigInteger &rhs);
     friend bool operator!=(const BigInteger &lhs, const BigInteger &rhs);
@@ -44,10 +39,7 @@ public:
     // BigInteger();
     // BigInteger(int64_t n);
     // explicit BigInteger(const std::string& str);
-    /**
-        Constructors implementation
-    */
-
+    /**Constructors implementation*/
     // Single constructor without parameters 
     BigInteger(){
         digits_of_BN.push_back(0);
@@ -106,15 +98,13 @@ public:
             first_sign_is_negative = false;
         }
 
-        // Save the number string to the vector
+        // Save the number in string to the vector
         for (int i = str.size() - 1; i >= 0; i--) {
             // skip thw first sign
             if (str[i] == '-' || str[i] == '+')
                 continue;
-
             if (!std::isdigit(str[i]))
                 throw std::invalid_argument("Invalid string, it's not a number or incorrect formated number");
-
             // Convers char to int 
             digits_of_BN.push_back(str[i] - '0');
         }
@@ -122,17 +112,9 @@ public:
         normalize();
     }
 
-
     // copy
-    //BigInteger(const BigInteger& other);
-    // copy constructor implementation
-    //BigInteger& operator=(const BigInteger& rhs);
-
     BigInteger(const BigInteger& other) = default;
     BigInteger& operator=(const BigInteger& rhs) = default;
-
-
-
     // unary operators, modificated 9.12.2024
     const BigInteger& operator+() const { return *this; }
     //BigInteger operator-() const;
@@ -143,23 +125,11 @@ public:
         result.first_sign_is_negative = !result.first_sign_is_negative;
         
         return result;
-        // add -0 check
+        // add -0 check 
     }
-
-    BigInteger operator*() const {
-        return *this;
-    }
-
-    //     return *this;
-    // 
-
-    // BigInteger operator%() const {
-    //     return *this;
-    // }
-
+    BigInteger operator*() const {return *this;}
 
     // binary arithmetics operators
-    
     BigInteger& operator+=(const BigInteger& rhs) {
         // it has 4 cases: 
         // 1. + + + 
@@ -382,12 +352,30 @@ public:
 
         BigInteger dividend = *this;
         BigInteger divisor = rhs;
+        //src:https://en.wikipedia.org/wiki/Division_algorithm
+        //https://stackoverflow.com/questions/27801397/newton-raphson-division-with-big-integers
+
+        // exmpl 
+        // 98765 anf 123
+        // [0 0 8 0 2] and remainder 119/123
+        // 1 stem take form devidend first digit 9, we cnn't devide by 123(ani jeden krat),
+        // go to the next step take second digit whaile we don't be able to devide by 123
+        // take 3r digit -> 987 
+        // 2 step calculate how many times we can devide 987 by 123
+        // 3 step write the result to the product in the right slot [0 0 8
+        // continue 
+        // result 98765/123 = 802, and we don't able to devide whole remainder 65 by 123
 
         BigInteger product;
         product.digits_of_BN.resize(dividend.digits_of_BN.size(), 0);
 
-        BigInteger current; 
-        
+        BigInteger current; // current is the num that contains the digits, updated after each step,
+        // 9->98->987--->3->36->365--->119 
+        // ---> return processed num by code:  
+            // while (divisor * (x + 1) <= current)x++;
+            //     current = current - divisor * x;
+        // where x is != 0
+
         // disable the first sign due to, after compparing the numbers we don't nedd to consider the first sitn 
         dividend.first_sign_is_negative = false;
         divisor.first_sign_is_negative = false;
@@ -395,12 +383,14 @@ public:
             if (current.digits_of_BN.size() == 1 && current.digits_of_BN[0] == 0) current.digits_of_BN.clear();
             current.digits_of_BN.insert(current.digits_of_BN.begin(), dividend.digits_of_BN[i]);
 
-            int x = 0;
+            int x = 0; // x in the scope of 0 to 9
             while (divisor * (x + 1) <= current)x++;
             current = current - divisor * x;
             product.digits_of_BN[i] = x;
+            //std::cout << x << " and " << current << std::endl;
         }
 
+        // don't need to normalize
         product.normalize();
         product.first_sign_is_negative = first_sign_after_dividion;
 
@@ -415,9 +405,10 @@ public:
         if (digits_of_BN.size() < rhs.digits_of_BN.size())
             return *this;
     
-        // Both first signs is the same
+        // Both first signs is the same 
         bool first_sign_after_dividion = first_sign_is_negative;
 
+        // Similar to the division, but return only remainder 
         BigInteger dividend = *this;
         BigInteger divisor = rhs;
         BigInteger current; 
@@ -428,10 +419,8 @@ public:
 
        // bool get_last = false;
         for (int i = dividend.digits_of_BN.size() - 1; i >= 0; --i) {
-            if (current.digits_of_BN.size() == 1 && current.digits_of_BN[0] == 0)
-                current.digits_of_BN.clear();//get_last = true;
+            if (current.digits_of_BN.size() == 1 && current.digits_of_BN[0] == 0)current.digits_of_BN.clear();//get_last = true;
             current.digits_of_BN.insert(current.digits_of_BN.begin(), dividend.digits_of_BN[i]);
-
             int x = 0;
             while (divisor * (x + 1) <= current)x++;
             current = current - divisor * x;
@@ -439,15 +428,18 @@ public:
 
         current.first_sign_is_negative = first_sign_after_dividion;
         *this = current;
-
         return *this;
     }
 
-    // friend BigInteger operator+(BigInteger lhs, const BigInteger& rhs) {
-    //     lhs += rhs;
-    //     return lhs;
+    // to get the first sign of the number
+    bool get_first_sign() const {
+        return first_sign_is_negative;
+    }
+
+    // void set_first_sign_is_negative() {
+    //     if (first_sign_is_negative) first_sign_is_negative = false;
+    //     else first_sign_is_negative = true;
     // }
-    // friend BigInteger op
 
     double sqrt() const;
 #if SUPPORT_MORE_OPS == 1
@@ -487,78 +479,53 @@ private:
 };
 
 inline std::ostream &operator<<(std::ostream &lhs, const BigInteger &rhs) {
-    if (rhs.first_sign_is_negative) {
-        lhs << '-';
-    } else {
-        lhs << '+';
-    }
+    if (rhs.first_sign_is_negative) lhs << '-';
+    // else {
+    //     lhs << '+';//???
+    // }
 
     // rbegin form the end, rend iterator to the begin
     //https://www.geeksforgeeks.org/vector-rbegin-and-rend-function-in-c-stl/
     //https://en.cppreference.com/w/cpp/iterator/rbegin
-    for (auto it = rhs.digits_of_BN.rbegin(); it != rhs.digits_of_BN.rend(); ++it) {
+    for (auto it = rhs.digits_of_BN.rbegin(); it != rhs.digits_of_BN.rend(); ++it)
         lhs << static_cast<char>(*it + '0'); // get number -> char -> add to stream
-    }
 
   //lhs << rhs.to_string();
   return lhs;
 }
 
 inline BigInteger operator+(const BigInteger& lhs, const BigInteger& rhs) {
-    /*TEST */ //
-    // std::cout << "operator+(const BigInteger& lhs, const BigInteger& rhs)" << std::endl;
-    // std::cout << "lhs: " << lhs << std::endl;
-    // std::cout << "rhs: " << rhs << std::endl;
-    BigInteger result = lhs;    // Make a copy
-    result += rhs;              // Add using operator+=
+    BigInteger result = lhs;
+    result += rhs;
     return result;
 }
 
 inline BigInteger operator-(const BigInteger& lhs, const BigInteger& rhs) {
-    /*TEST */ //
-    // std::cout << "operator+(const BigInteger& lhs, const BigInteger& rhs)" << std::endl;
-    // std::cout << "lhs: " << lhs << std::endl;
-    // std::cout << "rhs: " << rhs << std::endl;
     BigInteger result = lhs;
     result -= rhs;
     return result;
 }
 
 inline BigInteger operator*(const BigInteger& lhs, const BigInteger& rhs){
-    /*TEST */ //
-    // std::cout << "operator*(const BigInteger& lhs, const BigInteger& rhs)" << std::endl;
-    // std::cout << "lhs: " << lhs << std::endl;
-    // std::cout << "rhs: " << rhs << std::endl;
     BigInteger result = lhs;
     result *= rhs;
     return result;
 }
 
-
 inline BigInteger operator/(const BigInteger& lhs, const BigInteger& rhs) {
-    /*TEST */ //
-    // std::cout << "operator/(const BigInteger& lhs, const BigInteger& rhs)" << std::endl;
-    // std::cout << "lhs: " << lhs << std::endl;
-    // std::cout << "rhs: " << rhs << std::endl;
     BigInteger result = lhs;
     result /= rhs;
     return result;
 }
 
 inline BigInteger operator%(const BigInteger& lhs, const BigInteger& rhs) {
-    /*TEST */ //
-    // std::cout << "operator/(const BigInteger& lhs, const BigInteger& rhs)" << std::endl;
-    // std::cout << "lhs: " << lhs << std::endl;
-    // std::cout << "rhs: " << rhs << std::endl;
     BigInteger result = lhs;
     result %= rhs;
     return result;
 }
-
 // alternatively you can implement 
 // std::strong_ordering operator<=>(const BigInteger& lhs, const BigInteger& rhs);
 // idea is, that all comparison should work, it is not important how you do it
-//inline bool operator==(const BigInteger& lhs, const BigInteger& rhs); 
 inline bool operator==(const BigInteger& lhs, const BigInteger& rhs){
     if (rhs.digits_of_BN.size() == 1 && lhs.digits_of_BN.size() == 1 && rhs.digits_of_BN[0] == 0 && lhs.digits_of_BN[0] == 0)
         return true;
@@ -636,26 +603,200 @@ inline bool operator>=(const BigInteger& lhs, const BigInteger& rhs) {
 inline std::istream& operator>>(std::istream& lhs, BigInteger& rhs); // bonus
 #endif
 
-/**
-    Rational part
- */
+/** Rational part*/
 
 class BigRational
 {
+    friend std::ostream& operator<<(std::ostream &lhs, const BigRational &rhs);
+
+    friend BigRational operator+(BigRational lhs, const BigRational& rhs);
+    friend BigRational operator-(BigRational lhs, const BigRational& rhs);
+    
+    friend bool operator==(const BigRational& lhs, const BigRational& rhs);
+
 public:
     // constructors
-    BigRational();
-    BigRational(int64_t a, int64_t b);
-    BigRational(const std::string& a, const std::string& b);
+    BigRational() {
+        Numerator = 0;
+        Denominator = 1;
+        first_sign_is_negative_RN = false;
+    }
+    // constructor with int parameters
+    BigRational(int64_t a, int64_t b){
+        Numerator = a;
+        Denominator = b;
+
+        // b is always positive, so if not: 
+        if (b < 0)
+            throw std::invalid_argument("Rational part must be positive");
+        
+
+        if (a == 0 && b == 0) {
+            first_sign_is_negative_RN = false;
+        }else {
+            if (Numerator < 0)
+                first_sign_is_negative_RN = true;
+            else
+                first_sign_is_negative_RN = false;
+        }
+    }
+    // constructor with str parameters
+    BigRational(const std::string& a, const std::string& b) {
+        Numerator = BigInteger(a);
+        Denominator = BigInteger(b);
+
+        if (b[0] == '-')
+            throw std::invalid_argument("Rational part must be positive");
+
+        if (Numerator.get_first_sign() == 1){
+            first_sign_is_negative_RN = true;
+        } else {
+            first_sign_is_negative_RN = false;
+        }
+
+        //std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
+    }
+
     // copy
-    BigRational(const BigRational& other);
-    BigRational& operator=(const BigRational& rhs);
+    BigRational(const BigRational& other) = default;
+    BigRational& operator=(const BigRational& rhs) = default;
     // unary operators
-    const BigRational& operator+() const;
-    BigRational operator-() const;
+    const BigRational& operator+() const { return *this; }
+    BigRational operator-() const {
+        BigRational res = *this;
+        res.first_sign_is_negative_RN = !res.first_sign_is_negative_RN;
+        res.Numerator = -res.Numerator;
+        // res.Numerator.set_first_sign_is_negative();
+        return res;
+    }
     // binary arithmetics operators
-    BigRational& operator+=(const BigRational& rhs);
-    BigRational& operator-=(const BigRational& rhs);
+    BigRational& operator+=(const BigRational& rhs) {
+        // no need to - >> // it has 4 cases similar to the BigInteger
+        // 1. + + + 
+        // 2. + + - -> sub + - + 
+        // 3. - + + -> sub +(2) - +(1)
+        // 4. - + -
+
+        if (first_sign_is_negative_RN && !rhs.first_sign_is_negative_RN) {
+            // case 3
+            BigRational temp_rhs = rhs;       // Create a non-const copy
+            BigRational temp_this = *this;    // Create a copy of *this
+            temp_this.first_sign_is_negative_RN = false; // temp_this -> +
+            /// !!!
+            temp_this.Numerator = -temp_this.Numerator;
+
+            *this = temp_rhs - temp_this;
+            return *this;
+        } else if (!first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
+            // case 2
+            *this -= (-rhs);
+            return *this;
+        }
+
+        // num have the same signs, + + + or - + - -> addition
+        if (Denominator != rhs.Denominator){
+            //find NSD
+            BigInteger bigger_denominator;
+            BigInteger smaller_denominator;
+
+            if (Denominator > rhs.Denominator) {
+                bigger_denominator = Denominator;
+                smaller_denominator = rhs.Denominator;
+            } else {
+                bigger_denominator = rhs.Denominator;
+                smaller_denominator = Denominator;
+            }
+
+            BigInteger nsd = find_nsd(bigger_denominator, smaller_denominator); 
+            BigInteger nok = (bigger_denominator * smaller_denominator) / nsd;
+
+            // std::cout << "NOK: " << nok << " and NSD: " << nsd << std::endl;
+            // std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
+            // std::cout << "rhs.Numerator: " << rhs.Numerator << " and rhs.Denominator: " << rhs.Denominator << std::endl;
+
+            Numerator = (Numerator * (nok / Denominator)) + (rhs.Numerator * (nok / rhs.Denominator));
+            if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
+                Denominator = -nok;
+            } else {
+                Denominator = nok;
+            }
+
+        } else {
+            Numerator += rhs.Numerator;
+        }
+
+        //std::cout << "result: " << *this <<  " and " <<  first_sign_is_negative_RN << std::endl;
+
+        normalize();
+
+        return *this;
+    }
+    BigRational& operator-=(const BigRational& rhs) {
+        // it has 4 cases: 
+        // 1. + - + 
+        // 2. + - - -> add + + + 
+        // 3. - - + -> add - + - 
+        // 4. - - - -> sub +(2) - +(1)
+
+        if (!first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
+            // case 2
+            *this += -rhs;
+            return *this;
+        } else if (first_sign_is_negative_RN && !rhs.first_sign_is_negative_RN) {
+            // case 3
+           // std::cout << "case 3!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+            *this += -rhs;
+            return *this;
+        } else if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
+            // case 4
+            BigRational temp_rhs = rhs;       // Create a non-const copy
+            BigRational temp_this = *this;    // Create a copy of *this
+            temp_rhs.first_sign_is_negative_RN = false; // temp_this -> +
+            temp_rhs.Numerator = -temp_rhs.Numerator;
+
+            *this = temp_rhs + temp_this;
+            return *this;
+        }
+
+        // num have the same signs, + - + -> substraction
+        if (Denominator != rhs.Denominator){
+            //find NSD
+            BigInteger bigger_denominator;
+            BigInteger smaller_denominator;
+
+            if (Denominator > rhs.Denominator) {
+                bigger_denominator = Denominator;
+                smaller_denominator = rhs.Denominator;
+            } else {
+                bigger_denominator = rhs.Denominator;
+                smaller_denominator = Denominator;
+            }
+
+            BigInteger nsd = find_nsd(bigger_denominator, smaller_denominator); 
+            BigInteger nok = (bigger_denominator * smaller_denominator) / nsd;
+
+            //std::cout << "NOK: " << nok << " and NSD: " << nsd << std::endl;
+
+            Numerator = (Numerator * (nok / Denominator)) - (rhs.Numerator * (nok / rhs.Denominator));
+            Denominator = nok;
+
+            // upadate the first sign statatment 
+            if (Numerator < 0) {
+                first_sign_is_negative_RN = true;
+            } else {
+                first_sign_is_negative_RN = false;
+            }
+        } else {
+            Numerator -= rhs.Numerator;
+            if (Numerator < 0) {first_sign_is_negative_RN = true;} 
+            else { first_sign_is_negative_RN = false;}
+        }
+
+
+        normalize();
+        
+        return *this;
+    }
     BigRational& operator*=(const BigRational& rhs);
     BigRational& operator/=(const BigRational& rhs);
 
@@ -666,24 +807,77 @@ public:
 private:
     // here you can add private data and members, but do not add stuff to 
     // public interface, also you can declare friends here if you want
+
+    BigInteger Numerator;
+    BigInteger Denominator;
+    bool first_sign_is_negative_RN;
+
+    BigInteger find_nsd(BigInteger a, BigInteger b) {
+        if (b == 0)  return a;
+        return find_nsd(b, a % b);
+    }
+
+    void normalize() {
+        // if need that normalize the number, -42/21 -> -2/1 -> -2
+
+        BigInteger nsd = find_nsd(Numerator, Denominator);
+        Numerator /= nsd;
+        Denominator /= nsd;
+
+        if (Denominator < 0) {
+            Numerator = -Numerator;
+            Denominator = -Denominator;
+        }
+
+        // while (true) {
+        //     // While we can devide two part by NSD 
+        //     BigInteger nsd = find_nsd(Numerator, Denominator);
+        //     if (nsd != 1) { // can't to devide each more
+        //         Numerator = Numerator / nsd;
+        //         Denominator = Denominator / nsd;
+        //     } else {
+        //         break;
+        //     }
+        // }
+    }
 };
 
-inline BigRational operator+(BigRational lhs, const BigRational& rhs);
-inline BigRational operator-(BigRational lhs, const BigRational& rhs);
+inline BigRational operator+(BigRational lhs, const BigRational& rhs) {
+    BigRational result = lhs;
+    result += rhs;
+    return result;
+}
+inline BigRational operator-(BigRational lhs, const BigRational& rhs) {
+    BigRational result = lhs;
+    result -= rhs;
+    return result;
+}
 inline BigRational operator*(BigRational lhs, const BigRational& rhs);
 inline BigRational operator/(BigRational lhs, const BigRational& rhs);
 
 // alternatively you can implement 
 // std::strong_ordering operator<=>(const BigRational& lhs, const BigRational& rhs);
 // idea is, that all comparison should work, it is not important how you do it
-inline bool operator==(const BigRational& lhs, const BigRational& rhs);
+inline bool operator==(const BigRational& lhs, const BigRational& rhs) {
+    if (lhs.Numerator == rhs.Numerator && lhs.Denominator == rhs.Denominator)
+        return true;
+    else
+        return false;
+}
 inline bool operator!=(const BigRational& lhs, const BigRational& rhs);
 inline bool operator<(const BigRational& lhs, const BigRational& rhs);
 inline bool operator>(const BigRational& lhs, const BigRational& rhs);
 inline bool operator<=(const BigRational& lhs, const BigRational& rhs);
 inline bool operator>=(const BigRational& lhs, const BigRational& rhs);
 
-inline std::ostream& operator<<(std::ostream& lhs, const BigRational& rhs);
+inline std::ostream& operator<<(std::ostream& lhs, const BigRational& rhs) {
+    if (rhs.Denominator == BigInteger(1))
+        lhs << rhs.Numerator;
+    else
+        lhs << rhs.Numerator << '/' << rhs.Denominator;
+
+    return lhs;
+}
 
 #if SUPPORT_IFSTREAM == 1
 // this should behave exactly the same as reading int with respect to 

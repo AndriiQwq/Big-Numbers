@@ -107,12 +107,89 @@ std::vector<TestCase> tests = {
     }
 }
 
+void test_rational_operations() {
+    struct TestCase {
+        std::string description;
+        BigRational lhs;
+        BigRational rhs;
+        BigRational expected_result;
+        char operation;
+    };
+
+    std::vector<TestCase> tests = {
+        // Тесты для конструктора с int параметрами
+        {"Test 1: 1/2 + 1/3", BigRational(1, 2), BigRational(1, 3), BigRational(5, 6), '+'},
+        {"Test 2: 1/2 - 1/3", BigRational(1, 2), BigRational(1, 3), BigRational(1, 6), '-'},
+        {"Test 3: 1/2 += 1/3", BigRational(1, 2), BigRational(1, 3), BigRational(5, 6), 'a'},
+        {"Test 4: 1/2 -= 1/3", BigRational(1, 2), BigRational(1, 3), BigRational(1, 6), 's'},
+
+        // Тесты для конструктора со строковыми параметрами
+        {"Test 5: -1/2 + 1/3", BigRational("-1", "2"), BigRational("1", "3"), BigRational("-1", "6"), '+'},
+        {"Test 6: -1/2 - 1/3", BigRational("-1", "2"), BigRational("1", "3"), BigRational("-5", "6"), '-'},
+        {"Test 7: -1/2 += 1/3", BigRational("-1", "2"), BigRational("1", "3"), BigRational("-1", "6"), 'a'},
+        {"Test 8: -1/2 -= 1/3", BigRational("-1", "2"), BigRational("1", "3"), BigRational("-5", "6"), 's'},
+
+        // Тесты для конструктора по умолчанию
+        {"Test 9: 0/1 + 1/3", BigRational(), BigRational("1", "3"), BigRational("1", "3"), '+'},
+        {"Test 10: 0/1 - 1/3", BigRational(), BigRational("1", "3"), BigRational("-1", "3"), '-'},
+        {"Test 11: 0/1 += 1/3", BigRational(), BigRational("1", "3"), BigRational("1", "3"), 'a'},
+        {"Test 12: 0/1 -= 1/3", BigRational(), BigRational("1", "3"), BigRational("-1", "3"), 's'},
+
+        // Дополнительные простые тесты
+        {"Test 13: 2/3 + 1/3", BigRational(2, 3), BigRational(1, 3), BigRational(1, 1), '+'},
+        {"Test 14: 2/3 - 1/3", BigRational(2, 3), BigRational(1, 3), BigRational(1, 3), '-'},
+        {"Test 15: 2/3 += 1/3", BigRational(2, 3), BigRational(1, 3), BigRational(1, 1), 'a'},
+        {"Test 16: 2/3 -= 1/3", BigRational(2, 3), BigRational(1, 3), BigRational(1, 3), 's'}
+    };
+
+    for (const auto& test : tests) {
+        try {
+            BigRational result;
+            switch (test.operation) {
+                case '+':
+                    result = test.lhs + test.rhs;
+                    break;
+                case '-':
+                    result = test.lhs - test.rhs;
+                    break;
+                case 'a':
+                    result = test.lhs;
+                    result += test.rhs;
+                    break;
+                case 's':
+                    result = test.lhs;
+                    result -= test.rhs;
+                    break;
+                default:
+                    throw std::invalid_argument("Unknown operation");
+            }
+
+            bool pass = (result == test.expected_result);
+            std::string status = pass ? "PASS" : "FAIL";
+
+            std::cout << test.description << " | Expected: " << test.expected_result << " | Got: " << result << " | " << status << "\n";
+        }
+        catch (const std::exception& e) {
+            std::string status = "FAIL (Exception Caught)";
+            std::cout << test.description << " threw exception: " << e.what() << " | " << status << "\n";
+        }
+    }
+}
 int main() {
     try {
-        test_operations();
+        //test_operations();
+        test_rational_operations();
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
-    return 0;
+
+
+    BigRational c("-5", "3");
+    BigRational d(-2, 7);
+    BigRational e("-1", "21");
+
+    BigRational g("-2", "3");
+    BigRational h(-2, 3);
+    std::cout << "c + d: " << g + h  << std::endl;
 }
