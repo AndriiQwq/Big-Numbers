@@ -26,6 +26,7 @@ class BigInteger
     friend BigInteger operator-(const BigInteger &lhs, const BigInteger &rhs);
     friend BigInteger operator*(const BigInteger &lhs, const BigInteger &rhs);
     friend BigInteger operator/(const BigInteger &lhs, const BigInteger &rhs);
+    friend BigInteger operator%(const BigInteger &lhs, const BigInteger &rhs);
 
     // friend BigInteger operator+(const BigInteger &lhs, const int rhs);
 
@@ -152,6 +153,9 @@ public:
     //     return *this;
     // 
 
+    // BigInteger operator%() const {
+    //     return *this;
+    // }
 
 
     // binary arithmetics operators
@@ -360,12 +364,13 @@ public:
         if (rhs.digits_of_BN.size() == 1 && rhs.digits_of_BN[0] == 1)
             return *this;
 
-        // if (*this < rhs) {
-        //     digits_of_BN.clear();
-        //     digits_of_BN.push_back(0);
-        //     first_sign_is_negative = false;
-        //     return *this;
-        // } else if (*this == rhs) {
+        if (digits_of_BN.size() < rhs.digits_of_BN.size()) {
+            digits_of_BN.clear();
+            digits_of_BN.push_back(0);
+            first_sign_is_negative = false;
+            return *this;
+        } 
+        // else if (digits_of_BN == rhs.digits_of_BN) {
         //     digits_of_BN.clear();
         //     digits_of_BN.push_back(1);
         //     first_sign_is_negative = !(first_sign_is_negative == rhs.first_sign_is_negative);
@@ -378,13 +383,14 @@ public:
         BigInteger dividend = *this;
         BigInteger divisor = rhs;
 
-        dividend.first_sign_is_negative = false;
-        divisor.first_sign_is_negative = false;
-
         BigInteger product;
         product.digits_of_BN.resize(dividend.digits_of_BN.size(), 0);
 
-        BigInteger current;
+        BigInteger current; 
+        
+        // disable the first sign due to, after compparing the numbers we don't nedd to consider the first sitn 
+        dividend.first_sign_is_negative = false;
+        divisor.first_sign_is_negative = false;
         for (int i = dividend.digits_of_BN.size() - 1; i >= 0; --i) {
             if (current.digits_of_BN.size() == 1 && current.digits_of_BN[0] == 0) current.digits_of_BN.clear();
             current.digits_of_BN.insert(current.digits_of_BN.begin(), dividend.digits_of_BN[i]);
@@ -401,11 +407,41 @@ public:
         *this = product;
         return *this;
     }
+ 
+    BigInteger& operator%=(const BigInteger& rhs) {
+        if (rhs.digits_of_BN.size() == 1 && rhs.digits_of_BN[0] == 0)
+            throw std::invalid_argument("Division by zero");
 
-
-
+        if (digits_of_BN.size() < rhs.digits_of_BN.size())
+            return *this;
     
-    BigInteger& operator%=(const BigInteger& rhs);
+        // Both first signs is the same
+        bool first_sign_after_dividion = first_sign_is_negative;
+
+        BigInteger dividend = *this;
+        BigInteger divisor = rhs;
+        BigInteger current; 
+        
+        // disable the first sign due to, after compparing the numbers we don't nedd to consider the first sitn 
+        dividend.first_sign_is_negative = false;
+        divisor.first_sign_is_negative = false;
+
+       // bool get_last = false;
+        for (int i = dividend.digits_of_BN.size() - 1; i >= 0; --i) {
+            if (current.digits_of_BN.size() == 1 && current.digits_of_BN[0] == 0)
+                current.digits_of_BN.clear();//get_last = true;
+            current.digits_of_BN.insert(current.digits_of_BN.begin(), dividend.digits_of_BN[i]);
+
+            int x = 0;
+            while (divisor * (x + 1) <= current)x++;
+            current = current - divisor * x;
+        }
+
+        current.first_sign_is_negative = first_sign_after_dividion;
+        *this = current;
+
+        return *this;
+    }
 
     // friend BigInteger operator+(BigInteger lhs, const BigInteger& rhs) {
     //     lhs += rhs;
@@ -509,7 +545,15 @@ inline BigInteger operator/(const BigInteger& lhs, const BigInteger& rhs) {
     return result;
 }
 
-inline BigInteger operator%(const BigInteger& lhs, const BigInteger& rhs);
+inline BigInteger operator%(const BigInteger& lhs, const BigInteger& rhs) {
+    /*TEST */ //
+    // std::cout << "operator/(const BigInteger& lhs, const BigInteger& rhs)" << std::endl;
+    // std::cout << "lhs: " << lhs << std::endl;
+    // std::cout << "rhs: " << rhs << std::endl;
+    BigInteger result = lhs;
+    result %= rhs;
+    return result;
+}
 
 // alternatively you can implement 
 // std::strong_ordering operator<=>(const BigInteger& lhs, const BigInteger& rhs);
