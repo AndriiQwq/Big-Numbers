@@ -270,6 +270,9 @@ public:
             first_sign_is_negative = false;
             return *this;
         } else if (rhs.digits_of_BN[0] == 1 && rhs.digits_of_BN.size() == 1) {
+            // if multiplyt by -1 change the sign
+            if (rhs.first_sign_is_negative)
+                first_sign_is_negative = !first_sign_is_negative;
             return *this;
         }
 
@@ -277,7 +280,9 @@ public:
             first_sign_is_negative = false;
             return *this;
         } else if (digits_of_BN[0] == 1 && digits_of_BN.size() == 1) {
-            *this = rhs;
+            // if multiplyt by -1 change the sign
+            first_sign_is_negative = (first_sign_is_negative != rhs.first_sign_is_negative);
+            digits_of_BN = rhs.digits_of_BN;
             return *this;
         }
 
@@ -318,7 +323,6 @@ public:
 
         normalize();
         return *this;
-
     }
     BigInteger& operator/=(const BigInteger& rhs){
         // check normalization 
@@ -547,6 +551,9 @@ inline bool operator!=(const BigInteger& lhs, const BigInteger& rhs) {
 }
 
 inline bool operator<(const BigInteger& lhs, const BigInteger& rhs) {
+
+   // std::cout << "lhs: " << lhs << " and rhs: " << rhs << "|"<< lhs.first_sign_is_negative << " and " << rhs.first_sign_is_negative << std::endl;
+
     if (lhs.first_sign_is_negative && !rhs.first_sign_is_negative)
         return true;
     else if (!lhs.first_sign_is_negative && rhs.first_sign_is_negative)
@@ -613,6 +620,11 @@ class BigRational
     friend BigRational operator-(BigRational lhs, const BigRational& rhs);
     
     friend bool operator==(const BigRational& lhs, const BigRational& rhs);
+    friend bool operator!=(const BigRational& lhs, const BigRational& rhs);
+    friend bool operator<(const BigRational& lhs, const BigRational& rhs);
+    friend bool operator>(const BigRational& lhs, const BigRational& rhs);
+    friend bool operator<=(const BigRational& lhs, const BigRational& rhs);
+    friend bool operator>=(const BigRational& lhs, const BigRational& rhs);
 
 public:
     // constructors
@@ -626,10 +638,8 @@ public:
         Numerator = a;
         Denominator = b;
 
-        // b is always positive, so if not: 
-        if (b < 0)
-            throw std::invalid_argument("Rational part must be positive");
-        
+        if ( b == 0)
+            throw std::invalid_argument("Denominator can't be 0"); 
 
         if (a == 0 && b == 0) {
             first_sign_is_negative_RN = false;
@@ -639,20 +649,23 @@ public:
             else
                 first_sign_is_negative_RN = false;
         }
+
+        normalize();
     }
     // constructor with str parameters
     BigRational(const std::string& a, const std::string& b) {
         Numerator = BigInteger(a);
         Denominator = BigInteger(b);
 
-        if (b[0] == '-')
-            throw std::invalid_argument("Rational part must be positive");
+        if (Denominator == 0) throw std::invalid_argument("Denominator can't be 0");
 
         if (Numerator.get_first_sign() == 1){
             first_sign_is_negative_RN = true;
         } else {
             first_sign_is_negative_RN = false;
         }
+
+        normalize();
 
         //std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
     }
@@ -727,7 +740,7 @@ public:
 
         //std::cout << "result: " << *this <<  " and " <<  first_sign_is_negative_RN << std::endl;
 
-        normalize();
+       // normalize();
 
         return *this;
     }
@@ -793,7 +806,7 @@ public:
         }
 
 
-        normalize();
+        //normalize();
         
         return *this;
     }
@@ -819,6 +832,12 @@ private:
 
     void normalize() {
         // if need that normalize the number, -42/21 -> -2/1 -> -2
+
+        if (Denominator == 0)  throw std::invalid_argument("Denominator can't be 0");
+        if (Numerator == 0) {
+            Denominator = 1;
+            first_sign_is_negative_RN = false;
+        }
 
         BigInteger nsd = find_nsd(Numerator, Denominator);
         Numerator /= nsd;
@@ -864,11 +883,57 @@ inline bool operator==(const BigRational& lhs, const BigRational& rhs) {
     else
         return false;
 }
-inline bool operator!=(const BigRational& lhs, const BigRational& rhs);
-inline bool operator<(const BigRational& lhs, const BigRational& rhs);
-inline bool operator>(const BigRational& lhs, const BigRational& rhs);
-inline bool operator<=(const BigRational& lhs, const BigRational& rhs);
-inline bool operator>=(const BigRational& lhs, const BigRational& rhs);
+inline bool operator!=(const BigRational& lhs, const BigRational& rhs) { return !(lhs == rhs); }
+
+inline bool operator<(const BigRational& lhs, const BigRational& rhs) {
+    // if ((lhs.Numerator / lhs.Denominator) < (rhs.Numerator / rhs.Denominator))
+    //     return true;
+    // else if ((lhs.Numerator / lhs.Denominator) > (rhs.Numerator / rhs.Denominator)){
+    //     std::cout << lhs.first_sign_is_negative_RN << rhs.first_sign_is_negative_RN << std::endl;
+
+    //     return false;
+    // }
+        
+    // else if ((lhs.Numerator / lhs.Denominator) == (rhs.Numerator / rhs.Denominator)) {
+    //     std::cout << lhs.first_sign_is_negative_RN << rhs.first_sign_is_negative_RN << std::endl;
+    //     if (lhs.first_sign_is_negative_RN && !rhs.first_sign_is_negative_RN)
+    //         return true;
+    //     else if (!lhs.first_sign_is_negative_RN && rhs.first_sign_is_negative_RN)
+    //         return false;
+    //     else if (lhs.first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
+    //         if (lhs.Numerator < rhs.Numerator)
+    //             return false;
+    //         else
+    //             return true;
+    //     } else {
+    //         if (lhs.Numerator < rhs.Numerator)
+    //             return true;
+    //         else
+    //             return false;
+    //     }
+    // }
+    //https://www.youtube.com/watch?v=uy-pGMtIJeY
+    //std::cout << "lhs: " << lhs << " and rhs: " << rhs << "|"<< lhs.first_sign_is_negative_RN << " and " << rhs.first_sign_is_negative_RN << std::endl;
+    return (lhs.Numerator * rhs.Denominator) < (rhs.Numerator * lhs.Denominator);
+}
+inline bool operator>(const BigRational& lhs, const BigRational& rhs) {
+    if (lhs < rhs || lhs == rhs)
+        return false;
+    else
+        return true;
+}
+inline bool operator<=(const BigRational& lhs, const BigRational& rhs) {
+    if (lhs < rhs || lhs == rhs)
+        return true;
+    else
+        return false;
+}
+inline bool operator>=(const BigRational& lhs, const BigRational& rhs) {
+    if (lhs > rhs || lhs == rhs)
+        return true;
+    else
+        return false;
+}
 
 inline std::ostream& operator<<(std::ostream& lhs, const BigRational& rhs) {
     if (rhs.Denominator == BigInteger(1))
