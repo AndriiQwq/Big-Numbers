@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <random>
 
 void test_operations() {
     struct TestCase {
@@ -278,13 +279,136 @@ void test_big_rational_add_subtract() {
     }
 }
 
+void test_big_rational_multiplication() {
+    struct TestCase {
+        std::string description;
+        BigRational lhs;
+        BigRational rhs;
+        BigRational expected_result;
+    };
+
+    std::vector<TestCase> tests = {
+        // Тесты для умножения с различными конструкторами
+        {"Test 1: 1/2 * 2/3", BigRational(1, 2), BigRational(2, 3), BigRational(1, 3)},
+        {"Test 2: -1/2 * 2/3", BigRational(-1, 2), BigRational(2, 3), BigRational(-1, 3)},
+        {"Test 3: 1/2 * -2/3", BigRational(1, 2), BigRational(-2, 3), BigRational(-1, 3)},
+        {"Test 4: -1/2 * -2/3", BigRational(-1, 2), BigRational(-2, 3), BigRational(1, 3)},
+        {"Test 5: 1/2 * 3/1 (int + string)", BigRational(1, 2), BigRational("3", "1"), BigRational(3, 2)},
+        {"Test 6: -1/2 * 3/1 (int + string)", BigRational(-1, 2), BigRational("3", "1"), BigRational(-3, 2)},
+        {"Test 7: 1/2 * -3/1 (int + string)", BigRational(1, 2), BigRational("-3", "1"), BigRational(-3, 2)},
+        {"Test 8: -1/2 * -3/1 (int + string)", BigRational(-1, 2), BigRational("-3", "1"), BigRational(3, 2)},
+        {"Test 9: 2/3 * 3/4 (string + int)", BigRational("2", "3"), BigRational(3, 4), BigRational(1, 2)},
+        {"Test 10: -2/3 * 3/4 (string + int)", BigRational("-2", "3"), BigRational(3, 4), BigRational(-1, 2)},
+        {"Test 11: 2/3 * -3/4 (string + int)", BigRational("2", "3"), BigRational(-3, 4), BigRational(-1, 2)},
+        {"Test 12: -2/3 * -3/4 (string + int)", BigRational("-2", "3"), BigRational(-3, 4), BigRational(1, 2)}
+    };
+
+    for (const auto& test : tests) {
+        BigRational result = test.lhs * test.rhs;
+        bool pass = (result == test.expected_result);
+        std::string status = pass ? "PASS" : "FAIL";
+        std::cout << test.description
+                  << " | Expected: " << test.expected_result
+                  << " | Got: " << result
+                  << " | " << status << "\n";
+    }
+}
+
+void test_big_rational_division() {
+    struct TestCase {
+        std::string description;
+        BigRational lhs;
+        BigRational rhs;
+        BigRational expected_result;
+    };
+
+    std::vector<TestCase> tests = {
+        // Тесты для деления с различными конструкторами и большими значениями
+        {"Test 1: 123456789/987654321 / 2/3", BigRational("123456789", "987654321"), BigRational(2, 3), BigRational("370370367", "1975308642")},
+        {"Test 2: -123456789/987654321 / 2/3", BigRational("-123456789", "987654321"), BigRational(2, 3), BigRational("-370370367", "1975308642")},
+        {"Test 3: 123456789/987654321 / -2/3", BigRational("123456789", "987654321"), BigRational(-2, 3), BigRational("-370370367", "1975308642")},
+        {"Test 4: -123456789/987654321 / -2/3", BigRational("-123456789", "987654321"), BigRational(-2, 3), BigRational("370370367", "1975308642")},
+        {"Test 5: 987654321/123456789 / 3/1 (int + string)", BigRational("987654321", "123456789"), BigRational("3", "1"), BigRational("987654321", "370370367")},
+        {"Test 6: -987654321/123456789 / 3/1 (int + string)", BigRational("-987654321", "123456789"), BigRational("3", "1"), BigRational("-987654321", "370370367")}
+    };
+
+    for (const auto& test : tests) {
+        BigRational result = test.lhs / test.rhs;
+        bool pass = (result == test.expected_result);
+        std::string status = pass ? "PASS" : "FAIL";
+        std::cout << test.description
+                  << " | Expected: " << test.expected_result
+                  << " | Got: " << result
+                  << " | " << status << "\n";
+    }
+}
+
+BigInteger generate_large_number(size_t num_digits) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 9);
+
+    std::string number;
+    number.reserve(num_digits);
+
+    // Первую цифру делаем ненулевой
+    number += std::to_string(dis(gen) % 9 + 1);
+
+    // Остальные цифры
+    for (size_t i = 1; i < num_digits; ++i) {
+        number += std::to_string(dis(gen));
+    }
+
+    return BigInteger(number);
+}
+
+void test_big_integer_operations() {
+    struct TestCase {
+        std::string description;
+        BigInteger lhs;
+        BigInteger rhs;
+        BigInteger expected_result;
+        char operation; // 'a' - сложение, 's' - вычитание, 'm' - умножение
+    };
+
+    // Генерация больших чисел для тестов
+    BigInteger big_num1 = generate_large_number(10000); // 10000 цифр
+    BigInteger big_num2 = generate_large_number(10000); // 10000 цифр
+
+    std::vector<TestCase> tests = {
+        {"Test 1: big_num1 + big_num2", big_num1, big_num2, big_num1 + big_num2, 'a'},
+        {"Test 2: big_num1 - big_num2", big_num1, big_num2, big_num1 - big_num2, 's'},
+        {"Test 3: big_num1 * big_num2", big_num1, big_num2, big_num1 * big_num2, 'm'}
+    };
+
+    for (const auto& test : tests) {
+        BigInteger result;
+        if (test.operation == 'a') {
+            result = test.lhs + test.rhs;
+        } else if (test.operation == 's') {
+            result = test.lhs - test.rhs;
+        } else if (test.operation == 'm') {
+            result = test.lhs * test.rhs;
+        }
+        bool pass = (result == test.expected_result);
+        std::string status = pass ? "PASS" : "FAIL";
+        std::cout << test.description
+                  << " | Expected: " << test.expected_result
+                  << " | Got: " << result
+                  << " | " << status << "\n";
+    }
+}
+
 int main() {
     try {
         //test_operations();
         // test_rational_operations();
        // test_big_integer_multiplication();
-        test_big_rational_comparisons();
-        test_big_rational_add_subtract();
+        //test_big_rational_comparisons();
+        //test_big_rational_add_subtract();
+        //test_big_rational_multiplication();
+        //test_big_rational_division();
+        test_big_integer_operations();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
@@ -298,5 +422,5 @@ int main() {
 
     BigRational g("-2", "3");
     BigRational h(-2, 3);
-    std::cout << "c + d: " << g + h  << std::endl;
+    std::cout << "c * d: " << g * h  << std::endl;
 }

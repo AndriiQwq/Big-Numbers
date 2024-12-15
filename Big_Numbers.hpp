@@ -618,6 +618,8 @@ class BigRational
 
     friend BigRational operator+(BigRational lhs, const BigRational& rhs);
     friend BigRational operator-(BigRational lhs, const BigRational& rhs);
+    friend BigRational operator*(BigRational lhs, const BigRational& rhs);
+    friend BigRational operator/(BigRational lhs, const BigRational& rhs);
     
     friend bool operator==(const BigRational& lhs, const BigRational& rhs);
     friend bool operator!=(const BigRational& lhs, const BigRational& rhs);
@@ -762,8 +764,8 @@ public:
             return *this;
         } else if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
             // case 4
-            BigRational temp_rhs = rhs;       // Create a non-const copy
-            BigRational temp_this = *this;    // Create a copy of *this
+            BigRational temp_rhs = rhs;
+            BigRational temp_this = *this;
             temp_rhs.first_sign_is_negative_RN = false; // temp_this -> +
             temp_rhs.Numerator = -temp_rhs.Numerator;
 
@@ -804,14 +806,27 @@ public:
             if (Numerator < 0) {first_sign_is_negative_RN = true;} 
             else { first_sign_is_negative_RN = false;}
         }
-
-
         //normalize();
         
         return *this;
     }
-    BigRational& operator*=(const BigRational& rhs);
-    BigRational& operator/=(const BigRational& rhs);
+    BigRational& operator*=(const BigRational& rhs) {
+        Numerator *= rhs.Numerator;
+        Denominator *= rhs.Denominator;
+        first_sign_is_negative_RN = !(first_sign_is_negative_RN == rhs.first_sign_is_negative_RN);
+        normalize();
+        return *this;
+    }
+    BigRational& operator/=(const BigRational& rhs) {
+        if (rhs.Numerator == 0) throw std::invalid_argument("Division by zero");
+
+        Numerator *= rhs.Denominator;
+        Denominator *= rhs.Numerator;
+        first_sign_is_negative_RN = !(first_sign_is_negative_RN == rhs.first_sign_is_negative_RN);
+        normalize();
+        return *this;
+    }
+    
 
     double sqrt() const;
 #if SUPPORT_MORE_OPS == 1
@@ -871,8 +886,16 @@ inline BigRational operator-(BigRational lhs, const BigRational& rhs) {
     result -= rhs;
     return result;
 }
-inline BigRational operator*(BigRational lhs, const BigRational& rhs);
-inline BigRational operator/(BigRational lhs, const BigRational& rhs);
+inline BigRational operator*(BigRational lhs, const BigRational& rhs) {
+    BigRational result = lhs;
+    result *= rhs;
+    return result;
+}
+inline BigRational operator/(BigRational lhs, const BigRational& rhs) {
+    BigRational result = lhs;
+    result /= rhs;
+    return result;
+}
 
 // alternatively you can implement 
 // std::strong_ordering operator<=>(const BigRational& lhs, const BigRational& rhs);
@@ -890,26 +913,17 @@ inline bool operator<(const BigRational& lhs, const BigRational& rhs) {
     //     return true;
     // else if ((lhs.Numerator / lhs.Denominator) > (rhs.Numerator / rhs.Denominator)){
     //     std::cout << lhs.first_sign_is_negative_RN << rhs.first_sign_is_negative_RN << std::endl;
-
     //     return false;
     // }
-        
     // else if ((lhs.Numerator / lhs.Denominator) == (rhs.Numerator / rhs.Denominator)) {
     //     std::cout << lhs.first_sign_is_negative_RN << rhs.first_sign_is_negative_RN << std::endl;
     //     if (lhs.first_sign_is_negative_RN && !rhs.first_sign_is_negative_RN)
     //         return true;
     //     else if (!lhs.first_sign_is_negative_RN && rhs.first_sign_is_negative_RN)
     //         return false;
-    //     else if (lhs.first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
-    //         if (lhs.Numerator < rhs.Numerator)
-    //             return false;
-    //         else
-    //             return true;
+    //     else i
     //     } else {
-    //         if (lhs.Numerator < rhs.Numerator)
-    //             return true;
-    //         else
-    //             return false;
+    //         if 
     //     }
     // }
     //https://www.youtube.com/watch?v=uy-pGMtIJeY
@@ -936,10 +950,8 @@ inline bool operator>=(const BigRational& lhs, const BigRational& rhs) {
 }
 
 inline std::ostream& operator<<(std::ostream& lhs, const BigRational& rhs) {
-    if (rhs.Denominator == BigInteger(1))
-        lhs << rhs.Numerator;
-    else
-        lhs << rhs.Numerator << '/' << rhs.Denominator;
+    if (rhs.Denominator == BigInteger(1)) lhs << rhs.Numerator;
+    else lhs << rhs.Numerator << '/' << rhs.Denominator;
 
     return lhs;
 }
