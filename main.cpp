@@ -405,10 +405,10 @@ int main() {
         // test_rational_operations();
        // test_big_integer_multiplication();
         //test_big_rational_comparisons();
-        //test_big_rational_add_subtract();
-        //test_big_rational_multiplication();
-        //test_big_rational_division();
-        test_big_integer_operations();
+        test_big_rational_add_subtract();
+        test_big_rational_multiplication();
+        test_big_rational_division();
+        //test_big_integer_operations();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

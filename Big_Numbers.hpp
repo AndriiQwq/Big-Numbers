@@ -5,9 +5,9 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <cstdint> // int64_t, uint8_t
-#include <stdexcept> // invalid_argument
-#include <cctype> // isdigit
+#include <cstdint>
+#include <stdexcept>
+#include <cctype>
 
 // if you do not plan to implement bonus, you can delete those lines
 // or just keep them as is and do not define the macro to 1
@@ -120,7 +120,7 @@ public:
     //BigInteger operator-() const;
 
     BigInteger operator-() const {
-        // change the sign of the number
+        // change the sign of the num
         BigInteger result = *this;        
         result.first_sign_is_negative = !result.first_sign_is_negative;
         
@@ -448,7 +448,32 @@ public:
     double sqrt() const;
 #if SUPPORT_MORE_OPS == 1
     BigInteger isqrt() const;
-    bool is_prime(size_t k) const; // use rabbin-miller test with k rounds
+    bool is_prime(size_t k) const{
+        // use rabbin-miller test with k rounds
+        //https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Miller%E2%80%93Rabin_test
+
+        //Input #2: k, the number of rounds of testing to perform
+        if (*this < 2) return false;
+
+
+    // let s > 0 and d odd > 0 such that n − 1 = 2sd  # by factoring out powers of 2 from n − 1
+    // repeat k times:
+    //     a ← random(2, n − 2)  # n is always a probable prime to base 1 and n − 1
+    //     x ← ad mod n
+    //     repeat s times:
+    //         y ← x2 mod n
+    //         if y = 1 and x ≠ 1 and x ≠ n − 1 then # nontrivial square root of 1 modulo n
+    //             return “composite”
+    //         x ← y
+    //     if y ≠ 1 then
+    //         return “composite”
+    // return “probably prime”
+
+
+
+        
+        return true; //Output: “composite” if n is found to be composite, “probably prime” otherwise
+    } 
 #endif
 private:
     // here you can add private data and members, but do not add stuff to 
@@ -646,10 +671,8 @@ public:
         if (a == 0 && b == 0) {
             first_sign_is_negative_RN = false;
         }else {
-            if (Numerator < 0)
-                first_sign_is_negative_RN = true;
-            else
-                first_sign_is_negative_RN = false;
+            if (Numerator < 0) first_sign_is_negative_RN = true;
+            else first_sign_is_negative_RN = false;
         }
 
         normalize();
@@ -660,15 +683,9 @@ public:
         Denominator = BigInteger(b);
 
         if (Denominator == 0) throw std::invalid_argument("Denominator can't be 0");
-
-        if (Numerator.get_first_sign() == 1){
-            first_sign_is_negative_RN = true;
-        } else {
-            first_sign_is_negative_RN = false;
-        }
-
+        if (Numerator.get_first_sign() == 1){first_sign_is_negative_RN = true;
+        } else {first_sign_is_negative_RN = false;}
         normalize();
-
         //std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
     }
 
@@ -694,8 +711,8 @@ public:
 
         if (first_sign_is_negative_RN && !rhs.first_sign_is_negative_RN) {
             // case 3
-            BigRational temp_rhs = rhs;       // Create a non-const copy
-            BigRational temp_this = *this;    // Create a copy of *this
+            BigRational temp_rhs = rhs;
+            BigRational temp_this = *this;
             temp_this.first_sign_is_negative_RN = false; // temp_this -> +
             /// !!!
             temp_this.Numerator = -temp_this.Numerator;
@@ -711,37 +728,34 @@ public:
         // num have the same signs, + + + or - + - -> addition
         if (Denominator != rhs.Denominator){
             //find NSD
-            BigInteger bigger_denominator;
-            BigInteger smaller_denominator;
+            // BigInteger bigger_denominator;
+            // BigInteger smaller_denominator;
 
-            if (Denominator > rhs.Denominator) {
-                bigger_denominator = Denominator;
-                smaller_denominator = rhs.Denominator;
-            } else {
-                bigger_denominator = rhs.Denominator;
-                smaller_denominator = Denominator;
-            }
+            // if (Denominator > rhs.Denominator) {
+            //     bigger_denominator = Denominator;
+            //     smaller_denominator = rhs.Denominator;
+            // } else {
+            //     bigger_denominator = rhs.Denominator;
+            //     smaller_denominator = Denominator;
+            // }
 
-            BigInteger nsd = find_nsd(bigger_denominator, smaller_denominator); 
-            BigInteger nok = (bigger_denominator * smaller_denominator) / nsd;
+            // BigInteger nsd = find_nsd(bigger_denominator, smaller_denominator); 
+            // BigInteger nok = (bigger_denominator * smaller_denominator) / nsd;
+            BigInteger nsd = find_nsd(Denominator, rhs.Denominator);
+            BigInteger nok = (Denominator * rhs.Denominator) / nsd;
+            Numerator = (Numerator * (nok / Denominator)) + (rhs.Numerator * (nok / rhs.Denominator));
 
             // std::cout << "NOK: " << nok << " and NSD: " << nsd << std::endl;
             // std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
             // std::cout << "rhs.Numerator: " << rhs.Numerator << " and rhs.Denominator: " << rhs.Denominator << std::endl;
-
-            Numerator = (Numerator * (nok / Denominator)) + (rhs.Numerator * (nok / rhs.Denominator));
+            //Numerator = (Numerator * (nok / Denominator)) + (rhs.Numerator * (nok / rhs.Denominator));
             if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
                 Denominator = -nok;
-            } else {
-                Denominator = nok;
-            }
+            } else {Denominator = nok;}
 
-        } else {
-            Numerator += rhs.Numerator;
-        }
+        } else {Numerator += rhs.Numerator;}
 
         //std::cout << "result: " << *this <<  " and " <<  first_sign_is_negative_RN << std::endl;
-
        // normalize();
 
         return *this;
@@ -858,6 +872,7 @@ private:
         Numerator /= nsd;
         Denominator /= nsd;
 
+        // 3/-4 -> -3/4
         if (Denominator < 0) {
             Numerator = -Numerator;
             Denominator = -Denominator;
@@ -876,40 +891,23 @@ private:
     }
 };
 
-inline BigRational operator+(BigRational lhs, const BigRational& rhs) {
-    BigRational result = lhs;
-    result += rhs;
-    return result;
-}
-inline BigRational operator-(BigRational lhs, const BigRational& rhs) {
-    BigRational result = lhs;
-    result -= rhs;
-    return result;
-}
-inline BigRational operator*(BigRational lhs, const BigRational& rhs) {
-    BigRational result = lhs;
-    result *= rhs;
-    return result;
-}
-inline BigRational operator/(BigRational lhs, const BigRational& rhs) {
-    BigRational result = lhs;
-    result /= rhs;
-    return result;
-}
+inline BigRational operator+(BigRational lhs, const BigRational& rhs) {return lhs += rhs;}
+inline BigRational operator-(BigRational lhs, const BigRational& rhs) {return lhs -= rhs;}
+inline BigRational operator*(BigRational lhs, const BigRational& rhs) {return lhs *= rhs;}
+inline BigRational operator/(BigRational lhs, const BigRational& rhs) {return lhs /= rhs;}
 
 // alternatively you can implement 
 // std::strong_ordering operator<=>(const BigRational& lhs, const BigRational& rhs);
 // idea is, that all comparison should work, it is not important how you do it
 inline bool operator==(const BigRational& lhs, const BigRational& rhs) {
-    if (lhs.Numerator == rhs.Numerator && lhs.Denominator == rhs.Denominator)
-        return true;
-    else
-        return false;
+    if (lhs.Numerator == rhs.Numerator && lhs.Denominator == rhs.Denominator) return true;
+    else return false;
 }
 inline bool operator!=(const BigRational& lhs, const BigRational& rhs) { return !(lhs == rhs); }
-
-inline bool operator<(const BigRational& lhs, const BigRational& rhs) {
-    // if ((lhs.Numerator / lhs.Denominator) < (rhs.Numerator / rhs.Denominator))
+//https://www.youtube.com/watch?v=uy-pGMtIJeY
+inline bool operator<(const BigRational& lhs, const BigRational& rhs) {return (lhs.Numerator * rhs.Denominator) < (rhs.Numerator * lhs.Denominator);}
+//inline bool operator<(const BigRational& lhs, const BigRational& rhs) { 
+    //if ((lhs.Numerator / lhs.Denominator) < (rhs.Numerator / rhs.Denominator))
     //     return true;
     // else if ((lhs.Numerator / lhs.Denominator) > (rhs.Numerator / rhs.Denominator)){
     //     std::cout << lhs.first_sign_is_negative_RN << rhs.first_sign_is_negative_RN << std::endl;
@@ -926,27 +924,21 @@ inline bool operator<(const BigRational& lhs, const BigRational& rhs) {
     //         if 
     //     }
     // }
-    //https://www.youtube.com/watch?v=uy-pGMtIJeY
+    
     //std::cout << "lhs: " << lhs << " and rhs: " << rhs << "|"<< lhs.first_sign_is_negative_RN << " and " << rhs.first_sign_is_negative_RN << std::endl;
-    return (lhs.Numerator * rhs.Denominator) < (rhs.Numerator * lhs.Denominator);
-}
+    
+
 inline bool operator>(const BigRational& lhs, const BigRational& rhs) {
-    if (lhs < rhs || lhs == rhs)
-        return false;
-    else
-        return true;
+    if (lhs < rhs || lhs == rhs)return false;
+    else return true;
 }
 inline bool operator<=(const BigRational& lhs, const BigRational& rhs) {
-    if (lhs < rhs || lhs == rhs)
-        return true;
-    else
-        return false;
+    if (lhs < rhs || lhs == rhs) return true;
+    else return false;
 }
 inline bool operator>=(const BigRational& lhs, const BigRational& rhs) {
-    if (lhs > rhs || lhs == rhs)
-        return true;
-    else
-        return false;
+    if (lhs > rhs || lhs == rhs) return true;
+    else return false;
 }
 
 inline std::ostream& operator<<(std::ostream& lhs, const BigRational& rhs) {
