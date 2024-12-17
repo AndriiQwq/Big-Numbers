@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <random>
+#include <cassert>
 
 void test_operations() {
     struct TestCase {
@@ -399,21 +400,229 @@ void test_big_integer_operations() {
     }
 }
 
+void test_big_integer_sqrt() {
+    struct TestCase {
+        std::string description;
+        BigInteger input;
+        double expected_result;
+    };
+
+    std::vector<TestCase> tests = {
+        {"Test 1: sqrt(4)", BigInteger(4), 2.0},
+        {"Test 2: sqrt(9)", BigInteger(9), 3.0},
+        {"Test 3: sqrt(16)", BigInteger(16), 4.0},
+        {"Test 4: sqrt(25)", BigInteger(25), 5.0},
+        {"Test 5: sqrt(100)", BigInteger(100), 10.0},
+        {"Test 6: sqrt(1)", BigInteger(1), 1.0},
+        {"Test 7: sqrt(0)", BigInteger(0), 0.0},
+        {"Test 8: sqrt(2)", BigInteger(2), 1.4142135624},
+        {"Test 9: sqrt(3)", BigInteger(3), 1.7320508076},
+        {"Test 10: sqrt(123456789)", BigInteger(123456789), 11111.111060555},
+        {"Test 11: sqrt(1000000000000)", BigInteger(1000000000000), 1000000.0},
+        {"Test 12: sqrt(999999999999999999)", BigInteger(999999999999999999), 999999999.9999999995},
+        {"Test 13: sqrt(1000000000000000000)", BigInteger("1000000000000000000"), 1000000000.0},
+        {"Test 14: sqrt(1000000000000000000000000000000)", BigInteger("1000000000000000000000000000000"), 1000000000000000.0},
+        {"Test 15: sqrt(1e308)", BigInteger("1" + std::string(308, '0')), std::sqrt(1e308)},
+        {"Test 16: sqrt(1e309)", BigInteger("1" + std::string(309, '0')), std::numeric_limits<double>::infinity()}         
+        };
+
+    for (const auto& test : tests) {
+        try {
+            double result = test.input.sqrt();
+            bool pass = (std::abs(result - test.expected_result) < 1e-9);
+            std::string status = pass ? "PASS" : "FAIL";
+            std::cout << test.description
+                      << " | Expected: " << test.expected_result
+                      << " | Got: " << result
+                      << " | " << status << "\n";
+        } catch (const std::exception& e) {
+            std::cout << test.description << " threw exception: " << e.what() << " | FAIL\n";
+        }
+    }
+}
+
+
+void test_big_rational_sqrt() {
+    struct TestCase {
+        std::string description;
+        BigRational input;
+        double expected_result;
+    };
+
+    std::vector<TestCase> tests = {
+        {"Test 1: sqrt(4/1)", BigRational("4", "1"), 2.0},
+        {"Test 2: sqrt(9/1)", BigRational("9", "1"), 3.0},
+        {"Test 3: sqrt(16/1)", BigRational("16", "1"), 4.0},
+        {"Test 4: sqrt(25/1)", BigRational("25", "1"), 5.0},
+        {"Test 5: sqrt(100/1)", BigRational("100", "1"), 10.0},
+        {"Test 6: sqrt(1/1)", BigRational("1", "1"), 1.0},
+        {"Test 7: sqrt(0/1)", BigRational("0", "1"), 0.0},
+        {"Test 8: sqrt(2/1)", BigRational("2", "1"), 1.4142135624},
+        {"Test 9: sqrt(3/1)", BigRational("3", "1"), 1.7320508076},
+        {"Test 10: sqrt(123456789/1)", BigRational("123456789", "1"), 11111.111060555},
+        {"Test 11: sqrt(1000000000000/1)", BigRational("1000000000000", "1"), 1000000.0},
+        {"Test 12: sqrt(999999999999999999/1)", BigRational("999999999999999999", "1"), 999999999.9999999995},
+        {"Test 13: sqrt(1000000000000000000/1)", BigRational("1000000000000000000", "1"), 1000000000.0},
+        {"Test 14: sqrt(1000000000000000000000000000000/1)", BigRational("1000000000000000000000000000000", "1"), 1000000000000000.0},
+        {"Test 15: sqrt(1e308/1)", BigRational("1" + std::string(308, '0'), "1"), std::sqrt(1e308)},
+        {"Test 16: sqrt(1e309/1)", BigRational("1" + std::string(309, '0'), "1"), std::numeric_limits<double>::infinity()}
+    };
+
+    for (const auto& test : tests) {
+        try {
+            double result = test.input.sqrt();
+            bool pass = (std::abs(result - test.expected_result) < 1e-9);
+            std::string status = pass ? "PASS" : "FAIL";
+            std::cout << test.description
+                      << " | Expected: " << test.expected_result
+                      << " | Got: " << result
+                      << " | Difference: " << std::abs(result - test.expected_result)
+                      << " | " << status << "\n";
+        } catch (const std::exception& e) {
+            std::cout << test.description << " threw exception: " << e.what() << " | FAIL\n";
+        }
+    }
+}
+void test_big_integer_isqrt() {
+    struct TestCase {
+        std::string description;
+        BigInteger input;
+        BigInteger expected_result;
+    };
+
+std::vector<TestCase> tests = {
+    {"Test 1: isqrt(7)", BigInteger(7), BigInteger(2)},
+    {"Test 2: isqrt(17)", BigInteger(17), BigInteger(4)},
+    {"Test 3: isqrt(37)", BigInteger(37), BigInteger(6)},
+    {"Test 4: isqrt(57)", BigInteger(57), BigInteger(7)},
+    {"Test 5: isqrt(77)", BigInteger(77), BigInteger(8)},
+    {"Test 6: isqrt(97)", BigInteger(97), BigInteger(9)},
+    {"Test 7: isqrt(117)", BigInteger(117), BigInteger(10)},
+    {"Test 8: isqrt(137)", BigInteger(137), BigInteger(11)},
+    {"Test 9: isqrt(157)", BigInteger("157"), BigInteger(12)},
+    {"Test 10: isqrt(177)", BigInteger(177), BigInteger(13)},
+    {"Test 11: isqrt(197)", BigInteger(197), BigInteger("14")},
+    {"Test 12: isqrt(217)", BigInteger(217), BigInteger(14)},
+    {"Test 13: isqrt(237)", BigInteger(237), BigInteger(15)},
+    {"Test 14: isqrt(257)", BigInteger(257), BigInteger(16)},
+    {"Test 15: isqrt(277)", BigInteger(277), BigInteger("16")},
+    {"Test 16: isqrt(297)", BigInteger(297), BigInteger(17)},
+    {"Test 17: isqrt(317)", BigInteger(317), BigInteger(17)},
+    {"Test 18: isqrt(337)", BigInteger(337), BigInteger(18)},
+    {"Test 19: isqrt(357)", BigInteger(357), BigInteger(18)},
+    {"Test 20: isqrt(377)", BigInteger(377), BigInteger(19)},
+    {"Test 21: isqrt(12345678901234567890)", BigInteger("12345678901234567890"), BigInteger("3513641828")},
+    {"Test 22: isqrt(98765432109876543210)", BigInteger("98765432109876543210"), BigInteger("9938079904")},
+    {"Test 23: isqrt(11223344556677889900)", BigInteger("11223344556677889900"), BigInteger("1059762314")},
+    {"Test 24: isqrt(99887766554433221100)", BigInteger("99887766554433221100"), BigInteger("9994388245")},
+    {"Test 25: isqrt(10203040506070809000)", BigInteger("10203040506070809000"), BigInteger("3194218148")}
+
+};
+
+    for (const auto& test : tests) {
+        try {
+            BigInteger result = test.input.isqrt();
+            bool pass = (result == test.expected_result);
+            std::string status = pass ? "PASS" : "FAIL";
+            std::cout << test.description
+                      << " | Expected: " << test.expected_result
+                      << " | Got: " << result
+                      << " | " << status << "\n";
+        } catch (const std::exception& e) {
+            std::cout << test.description << " threw exception: " << e.what() << " | FAIL\n";
+        }
+    }
+}
+
+
+void test_big_integer_is_prime() {
+    struct TestCase {
+        std::string description;
+        BigInteger input;
+        bool expected_result;
+    };
+
+    std::vector<TestCase> tests = {
+        {"Test 1: is_prime(2)", BigInteger(2), true},
+        {"Test 2: is_prime(3)", BigInteger(3), true},
+        {"Test 3: is_prime(4)", BigInteger(4), false},
+        {"Test 4: is_prime(5)", BigInteger(5), true},
+        {"Test 5: is_prime(17)", BigInteger(17), true},
+        {"Test 6: is_prime(18)", BigInteger(18), false},
+        {"Test 7: is_prime(19)", BigInteger(19), true},
+        {"Test 8: is_prime(20)", BigInteger(20), false},
+        {"Test 9: is_prime(23)", BigInteger(23), true},
+        {"Test 10: is_prime(24)", BigInteger(24), false},
+        {"Test 11: is_prime(29)", BigInteger(29), true},
+        {"Test 12: is_prime(97)", BigInteger(97), true},
+        {"Test 13: is_prime(100)", BigInteger(100), false},
+        {"Test 14: is_prime(101)", BigInteger(101), true},
+        {"Test 15: is_prime(102)", BigInteger(102), false},
+        {"Test 16: is_prime(103)", BigInteger(103), true},
+        {"Test 17: is_prime(104)", BigInteger(104), false},
+        {"Test 18: is_prime(1009)", BigInteger(1009), true},
+        {"Test 19: is_prime(1024)", BigInteger(1024), false},
+        {"Test 20: is_prime(104729)", BigInteger(104729), true}, // 10000-е простое число
+        {"Test 21: is_prime(12345678901234567890)", BigInteger("12345678901234567890"), false},
+        {"Test 22: is_prime(9876543210987654321)", BigInteger("9876543210987654321"), false},
+        {"Test 23: is_prime(112233445566778899)", BigInteger("112233445566778899"), false},
+        {"Test 24: is_prime(998877665544332211)", BigInteger("998877665544332211"), false},
+        {"Test 25: is_prime(102030405060708090)", BigInteger("102030405060708090"), false}
+    };
+
+    for (const auto& test : tests) {
+        try {
+            bool result = test.input.is_prime(5); // 5 раундов теста Миллера-Рабина
+            bool pass = (result == test.expected_result);
+            std::string status = pass ? "PASS" : "FAIL";
+            std::cout << test.description
+                      << " | Expected: " << test.expected_result
+                      << " | Got: " << result
+                      << " | " << status << "\n";
+        } catch (const std::exception& e) {
+            std::cout << test.description << " threw exception: " << e.what() << " | FAIL\n";
+        }
+    }
+}
+
 int main() {
     try {
-        //test_operations();
-        // test_rational_operations();
-       // test_big_integer_multiplication();
-        //test_big_rational_comparisons();
-        test_big_rational_add_subtract();
-        test_big_rational_multiplication();
-        test_big_rational_division();
+    //     test_operations();
+    //     test_rational_operations();
+    //    test_big_integer_multiplication();
+
+        // test_big_rational_comparisons();
+        // test_big_rational_add_subtract();
+        // test_big_rational_multiplication();
+        // test_big_rational_division();
         //test_big_integer_operations();
+
+        //test_big_integer_sqrt();
+        //test_big_rational_sqrt();
+
+        // test_big_rational_sqrt();
+                //test_big_integer_isqrt();
+        test_big_integer_is_prime();
+
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
+
+    //test         {"Test 2: -1/2 + 1/3", BigRational(-1, 2), BigRational(1, 3), BigRational(-1, 6), 'a'},
+
+    BigRational a("-1", "2");
+    BigRational b("1", "3");
+    std::cout << "a + b: " << a + b << std::endl;
+
+    // // Test += 3 cases
+    // BigInteger a("-123456789");
+    // BigInteger b("-987654321");
+    // std::cout << "a += b: " << (a -= b) << std::endl;
+    // BigInteger q("987654321");
+    // BigInteger w("-123456789");
+    // std::cout << "q += w: " << (q += w) << std::endl;
 
 
     BigRational c("-5", "3");
@@ -423,4 +632,21 @@ int main() {
     BigRational g("-2", "3");
     BigRational h(-2, 3);
     std::cout << "c * d: " << g * h  << std::endl;
+
+    //Write test fore BN nnad operator - 
+    BigRational i("-1", "2");
+    BigRational j(1, 3);
+    std::cout << "i - j: " << i + j  << std::endl;
+        std::cout << "i - j: " << -i - (-j)  << std::endl;
+
+
+    BigRational k("-2", "3");
+    BigRational l(-2, 3);
+    std::cout << "k / l: " << k - l  << std::endl;
+
+    BigRational m("-2", "3");
+    BigRational n(-2, 3);
+    std::cout << "m % n: " << m - n  << std::endl;
+
+
 }

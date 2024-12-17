@@ -8,11 +8,14 @@
 #include <cstdint>
 #include <stdexcept>
 #include <cctype>
+#include <limits> 
+#include <random>
+// #include <cmath>
 
 // if you do not plan to implement bonus, you can delete those lines
 // or just keep them as is and do not define the macro to 1
 #define SUPPORT_IFSTREAM 0
-#define SUPPORT_MORE_OPS 0
+#define SUPPORT_MORE_OPS 1
 #define SUPPORT_EVAL 0 // special bonus
 
 class BigInteger
@@ -56,21 +59,14 @@ public:
             digits_of_BN.push_back(0);
             first_sign_is_negative = false;
         } else {
-
-            if (num < 0)
-                first_sign_is_negative = true;
-            else
-                first_sign_is_negative = false;
+            if (num < 0) first_sign_is_negative = true;
+            else first_sign_is_negative = false;
 
             int64_t temp;
-
-            if (first_sign_is_negative)
-                temp = -num;
-            else
-                temp = num;
-
+            if (first_sign_is_negative) temp = -num;
+            else temp = num;
+            // 65304 -> 40356 in vectors
             int base = 10;
-
             while (temp > 0) {
                 digits_of_BN.push_back(temp % base);
                 temp /= base;
@@ -82,7 +78,6 @@ public:
     explicit BigInteger(const std::string& str) {
         if (str.empty()) 
             throw std::invalid_argument("Empty string");
-        
 
         if (str[0] == '-') {
             if (str.size() == 1)
@@ -112,7 +107,7 @@ public:
         normalize();
     }
 
-    // copy
+    // copy, default copy constructor
     BigInteger(const BigInteger& other) = default;
     BigInteger& operator=(const BigInteger& rhs) = default;
     // unary operators, modificated 9.12.2024
@@ -152,10 +147,9 @@ public:
 
         if (first_sign_is_negative && !rhs.first_sign_is_negative) {
             // case 3
-            BigInteger temp_rhs = rhs;       // Create a non-const copy
-            BigInteger temp_this = *this;    // Create a copy of *this
-            temp_this.first_sign_is_negative = false; // temp_this -> +
-            *this = temp_rhs - temp_this;
+            first_sign_is_negative = false;
+            *this = rhs - *this;
+            //std::cout << "case 3: " << *this << "and " << rhs << std::endl;
             return *this;
         } else if (!first_sign_is_negative && rhs.first_sign_is_negative) {
             // case 2
@@ -172,13 +166,9 @@ public:
             int base = 10 ;
             int carry = 0;
             for (size_t i = 0; i < max_size || carry; ++i) {
-                if (i == digits_of_BN.size()) 
-                    digits_of_BN.push_back(0);
-                
+                if (i == digits_of_BN.size()) digits_of_BN.push_back(0);        
                 int sum = carry + digits_of_BN[i];
-                if (i < rhs.digits_of_BN.size())
-                    sum += rhs.digits_of_BN[i];
-                
+                if (i < rhs.digits_of_BN.size()) sum += rhs.digits_of_BN[i];
                 digits_of_BN[i] = sum % base;
                 carry = sum / base;
             }
@@ -206,15 +196,10 @@ public:
             return *this;
         } else if ( first_sign_is_negative && rhs.first_sign_is_negative) {
             // case 4
-            BigInteger temp_rhs = rhs;       // Create a non-const copy
-            BigInteger temp_this = *this;    // Create a copy of *this
-            temp_rhs.first_sign_is_negative = false; // temp_this -> +
-            /*TEST */ // std::cout << "case 4: " << *this << "and " << temp_rhs << std::endl;
-
-            *this = temp_rhs + temp_this;
+            first_sign_is_negative = false;
+            *this = -rhs - *this;
             return *this;
         }
-
 
         // num have the same signs, + - + -> substraction
         BigInteger lhs_num = *this;
@@ -222,28 +207,22 @@ public:
 
         // To return thre result with the larger number sign
         bool this_is_larger = compare_abs(lhs_num, rhs_num) >= 0;
-        
-        const BigInteger& larger = this_is_larger ? lhs_num : rhs_num;
-        const BigInteger& smaller = this_is_larger ? rhs_num : lhs_num;
-        
-        digits_of_BN = larger.digits_of_BN;
         first_sign_is_negative = this_is_larger ? first_sign_is_negative : !first_sign_is_negative;
-        
-        int base = 10;
-        int borrow = 0; // borrow to the next digit
+        const BigInteger& larger = this_is_larger ? lhs_num : rhs_num;
+        digits_of_BN = larger.digits_of_BN;
+        const BigInteger& smaller = this_is_larger ? rhs_num : lhs_num;
+  
+        //https://www.geeksforgeeks.org/bigint-big-integers-in-c-with-example/
+        int base = 10, borrow = 0; // borrow to the next digit
         for (size_t i = 0; i < digits_of_BN.size(); ++i) {
-            int diff = digits_of_BN[i] - borrow;
-            if (i < smaller.digits_of_BN.size()) 
-                diff -= smaller.digits_of_BN[i];
+            int s = digits_of_BN[i] - borrow;
+            if (i < smaller.digits_of_BN.size())  s -= smaller.digits_of_BN[i];
             
-            if (diff < 0) {
-                diff += base;
+            if (s < 0) {
+                s += base;
                 borrow = 1;
-            } else {
-                borrow = 0;
-            }
-
-            digits_of_BN[i] = diff;
+            } else {borrow = 0;}
+            digits_of_BN[i] = s;
         }
         
         normalize();
@@ -271,8 +250,7 @@ public:
             return *this;
         } else if (rhs.digits_of_BN[0] == 1 && rhs.digits_of_BN.size() == 1) {
             // if multiplyt by -1 change the sign
-            if (rhs.first_sign_is_negative)
-                first_sign_is_negative = !first_sign_is_negative;
+            if (rhs.first_sign_is_negative) first_sign_is_negative = !first_sign_is_negative;
             return *this;
         }
 
@@ -286,7 +264,7 @@ public:
             return *this;
         }
 
-        // Multiplaing the numbers
+        // Multiplaing the numbers, from the given source 
         
         // Determine the first sign of the result of the multiplication
         bool first_sign_of_multiplication = !(first_sign_is_negative == rhs.first_sign_is_negative);
@@ -415,6 +393,7 @@ public:
         // Similar to the division, but return only remainder 
         BigInteger dividend = *this;
         BigInteger divisor = rhs;
+        //Maybe is better don't copy variable, but use *this directly
         BigInteger current; 
         
         // disable the first sign due to, after compparing the numbers we don't nedd to consider the first sitn 
@@ -431,7 +410,7 @@ public:
         }
 
         current.first_sign_is_negative = first_sign_after_dividion;
-        *this = current;
+        *this = current; // remainder
         return *this;
     }
 
@@ -447,33 +426,9 @@ public:
 
     double sqrt() const;
 #if SUPPORT_MORE_OPS == 1
+    // bonus
     BigInteger isqrt() const;
-    bool is_prime(size_t k) const{
-        // use rabbin-miller test with k rounds
-        //https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Miller%E2%80%93Rabin_test
-
-        //Input #2: k, the number of rounds of testing to perform
-        if (*this < 2) return false;
-
-
-    // let s > 0 and d odd > 0 such that n − 1 = 2sd  # by factoring out powers of 2 from n − 1
-    // repeat k times:
-    //     a ← random(2, n − 2)  # n is always a probable prime to base 1 and n − 1
-    //     x ← ad mod n
-    //     repeat s times:
-    //         y ← x2 mod n
-    //         if y = 1 and x ≠ 1 and x ≠ n − 1 then # nontrivial square root of 1 modulo n
-    //             return “composite”
-    //         x ← y
-    //     if y ≠ 1 then
-    //         return “composite”
-    // return “probably prime”
-
-
-
-        
-        return true; //Output: “composite” if n is found to be composite, “probably prime” otherwise
-    } 
+    bool is_prime(size_t k) const;
 #endif
 private:
     // here you can add private data and members, but do not add stuff to 
@@ -506,6 +461,128 @@ private:
     }
 
 };
+
+double BigInteger::sqrt() const {
+    if (first_sign_is_negative)
+        throw std::invalid_argument("Negative number");
+
+    if (digits_of_BN.size() == 1 && digits_of_BN[0] == 0) {
+        return 0;
+    } else if (digits_of_BN.size() == 1 && digits_of_BN[0] == 1) {
+        return 1;
+    }
+
+    // Newton-Raphson method
+    //https://cp-algorithms.com/num_methods/roots_newton.html?utm_source=chatgpt.com
+    //y^2=n, y0 = n/2, y1 = (y0 + n/y0)/2, y2 = (y1 + n/y1)/2, ...
+
+    double n = 0;
+    double decade = 1;
+    for (size_t i = 0; i < digits_of_BN.size(); ++i) {
+        n += digits_of_BN[i] * decade;
+        decade *= 10;
+    }
+
+    //std::cout << n << '\n';
+
+    if (n > std::numeric_limits<double>::max()) throw std::runtime_error("numeric_limits: double max reached");
+    double out = n / 2;
+    const double accuracy = 1e-15; // accuracy == 0.000000000001
+
+    for (;;) {
+        double next_output = (out + n / out) / 2;
+        if ((next_output - out < 0 ? -(next_output - out) : next_output - out) < accuracy) return out;
+        out = next_output;
+    }
+
+    return out;
+}
+
+BigInteger BigInteger::isqrt() const {
+    if (first_sign_is_negative)
+        throw std::invalid_argument("Negative number");
+
+    if (digits_of_BN.size() == 1 && digits_of_BN[0] == 0) {
+        return BigInteger(0);
+    } else if (digits_of_BN.size() == 1 && digits_of_BN[0] == 1) {
+        return BigInteger(1);
+    }
+
+    // Binary search
+
+    BigInteger out = 0;
+    BigInteger min = 0;
+    BigInteger max = *this;
+
+    while (min <= max) {
+        BigInteger mid = min + (max - min) / 2;
+
+        if (mid * mid == *this) return mid;
+        else if (mid * mid < *this) {
+            min = mid + 1;
+            out = mid;
+        }
+        else max = mid - 1;
+    }
+
+    return out;
+}
+
+bool BigInteger::is_prime(size_t k) const {
+    std::cout << "is_prime \n" << k << std::endl;
+    if (*this < 2) return false;
+    if (*this == 2) return true;
+
+    // use rabbin-miller test with k rounds, with the given source
+    //https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Miller%E2%80%93Rabin_test
+
+    //Input #2: k, the number of rounds of testing to perform
+
+    // let s > 0 and d odd > 0 such that n − 1 = 2sd  # by factoring out powers of 2 from n − 1
+    size_t s = 0;
+
+    BigInteger n = *this - 1;
+    BigInteger d = n;
+
+    while (d % 2 == 0) {
+        d /= 2;
+        s++;
+    }
+
+    for (size_t i = 0; i < k; i++){
+    //     a ← random(2, n − 2)  # n is always a probable prime to base 1 and n − 1
+        //BigInteger a = random_bigint(2, *this - 2);
+        BigInteger a = 2;
+        BigInteger x = a;
+        BigInteger y;
+        //     x ← ad mod n   
+        for (size_t t = 1; t < d; t++) {x *= x;}
+            x %= *this;
+
+        std::cout << "x: " << x << std::endl;
+
+            //     repeat s times:
+           for (size_t j = 0; j < s ; j++) {
+            //         y ← x2 mod n
+               y = (x * x) % *this;
+
+    //         if y = 1 and x ≠ 1 and x ≠ n − 1 then # nontrivial square root of 1 modulo n
+    //             return “composite”
+               if (y == 1 && x != 1 && x != *this - 1) return false;
+
+               x = y;
+    //         x ← y
+           }
+            
+ //     if y ≠ 1 then
+ //         return “composite”
+        if (x != 1) return false;
+    }
+    // return “probably prime”
+
+
+    return true; //Output: “composite” if n is found to be composite, “probably prime” otherwise
+}
 
 inline std::ostream &operator<<(std::ostream &lhs, const BigInteger &rhs) {
     if (rhs.first_sign_is_negative) lhs << '-';
@@ -608,24 +685,17 @@ inline bool operator<(const BigInteger& lhs, const BigInteger& rhs) {
 }
 
 inline bool operator>(const BigInteger& lhs, const BigInteger& rhs) {
-
-    if ( (lhs < rhs) && lhs != rhs)
-        return false;
-    else
-        return true;
+    if ((lhs < rhs) || lhs == rhs) return false;
+    else return true;
 }
 
 inline bool operator<=(const BigInteger& lhs, const BigInteger& rhs) {
-    if (lhs < rhs || lhs == rhs)
-        return true;
-    else
-        return false;
+    if (lhs < rhs || lhs == rhs) return true;
+    else return false;
 }
 inline bool operator>=(const BigInteger& lhs, const BigInteger& rhs) {
-    if (lhs > rhs || lhs == rhs)
-        return true;
-    else
-        return false;
+    if (lhs > rhs || lhs == rhs) return true;
+    else return false;
 }
 
 
@@ -666,7 +736,7 @@ public:
         Denominator = b;
 
         if ( b == 0)
-            throw std::invalid_argument("Denominator can't be 0"); 
+            throw std::invalid_argument("Denominator can't == 0"); 
 
         if (a == 0 && b == 0) {
             first_sign_is_negative_RN = false;
@@ -682,7 +752,7 @@ public:
         Numerator = BigInteger(a);
         Denominator = BigInteger(b);
 
-        if (Denominator == 0) throw std::invalid_argument("Denominator can't be 0");
+        if (Denominator == 0) throw std::invalid_argument("Denominator can't == 0");
         if (Numerator.get_first_sign() == 1){first_sign_is_negative_RN = true;
         } else {first_sign_is_negative_RN = false;}
         normalize();
@@ -711,12 +781,15 @@ public:
 
         if (first_sign_is_negative_RN && !rhs.first_sign_is_negative_RN) {
             // case 3
+            /// std::cout << "case 3!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+
             BigRational temp_rhs = rhs;
             BigRational temp_this = *this;
             temp_this.first_sign_is_negative_RN = false; // temp_this -> +
             /// !!!
             temp_this.Numerator = -temp_this.Numerator;
-
+            
+            //first_sign_is_negative_RN = false;
             *this = temp_rhs - temp_this;
             return *this;
         } else if (!first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
@@ -784,37 +857,38 @@ public:
             temp_rhs.Numerator = -temp_rhs.Numerator;
 
             *this = temp_rhs + temp_this;
+
+            //             first_sign_is_negative = false;
+            // *this = -rhs - *this;
+            // return *this;
             return *this;
         }
 
         // num have the same signs, + - + -> substraction
         if (Denominator != rhs.Denominator){
             //find NSD
-            BigInteger bigger_denominator;
-            BigInteger smaller_denominator;
+        //     BigInteger bigger_denominator;
+        //     BigInteger smaller_denominator;
 
-            if (Denominator > rhs.Denominator) {
-                bigger_denominator = Denominator;
-                smaller_denominator = rhs.Denominator;
-            } else {
-                bigger_denominator = rhs.Denominator;
-                smaller_denominator = Denominator;
-            }
+        //     if (Denominator > rhs.Denominator) {
+        //         bigger_denominator = Denominator;
+        //         smaller_denominator = rhs.Denominator;
+        //     } else {
+        //         bigger_denominator = rhs.Denominator;
+        //         smaller_denominator = Denominator
+        //     // // upadate the first sign statatment 
 
-            BigInteger nsd = find_nsd(bigger_denominator, smaller_denominator); 
-            BigInteger nok = (bigger_denominator * smaller_denominator) / nsd;
 
-            //std::cout << "NOK: " << nok << " and NSD: " << nsd << std::endl;
+            //std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
 
+            BigInteger nsd = find_nsd(Denominator, rhs.Denominator);
+            BigInteger nok = (Denominator * rhs.Denominator) / nsd;
             Numerator = (Numerator * (nok / Denominator)) - (rhs.Numerator * (nok / rhs.Denominator));
-            Denominator = nok;
 
-            // upadate the first sign statatment 
-            if (Numerator < 0) {
-                first_sign_is_negative_RN = true;
-            } else {
-                first_sign_is_negative_RN = false;
-            }
+            if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
+                Denominator = -nok;
+            } else {Denominator = nok;}
+            
         } else {
             Numerator -= rhs.Numerator;
             if (Numerator < 0) {first_sign_is_negative_RN = true;} 
@@ -890,6 +964,22 @@ private:
         // }
     }
 };
+
+double BigRational::sqrt() const {
+    double n_sqrt = Numerator.sqrt();
+    double d_sqrt = Denominator.sqrt();
+    double res = n_sqrt / d_sqrt;
+    
+    return res;
+}
+
+BigInteger BigRational::isqrt() const {
+    BigInteger n_isqrt = Numerator.isqrt();
+    BigInteger d_isqrt = Denominator.isqrt();
+    BigInteger res = n_isqrt / d_isqrt;
+    
+    return res;
+}
 
 inline BigRational operator+(BigRational lhs, const BigRational& rhs) {return lhs += rhs;}
 inline BigRational operator-(BigRational lhs, const BigRational& rhs) {return lhs -= rhs;}
