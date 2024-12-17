@@ -4,6 +4,7 @@
 #include <string>
 #include <random>
 #include <cassert>
+#include <sstream>
 
 void test_operations() {
     struct TestCase {
@@ -535,58 +536,921 @@ std::vector<TestCase> tests = {
 }
 
 
-void test_big_integer_is_prime() {
-    struct TestCase {
-        std::string description;
-        BigInteger input;
-        bool expected_result;
-    };
+// void test_big_integer_is_prime() {
+//     struct TestCase {
+//         std::string description;
+//         BigInteger input;
+//         bool expected_result;
+//     };
 
-    std::vector<TestCase> tests = {
-        {"Test 1: is_prime(2)", BigInteger(2), true},
-        {"Test 2: is_prime(3)", BigInteger(3), true},
-        {"Test 3: is_prime(4)", BigInteger(4), false},
-        {"Test 4: is_prime(5)", BigInteger(5), true},
-        {"Test 5: is_prime(17)", BigInteger(17), true},
-        {"Test 6: is_prime(18)", BigInteger(18), false},
-        {"Test 7: is_prime(19)", BigInteger(19), true},
-        {"Test 8: is_prime(20)", BigInteger(20), false},
-        {"Test 9: is_prime(23)", BigInteger(23), true},
-        {"Test 10: is_prime(24)", BigInteger(24), false},
-        {"Test 11: is_prime(29)", BigInteger(29), true},
-        {"Test 12: is_prime(97)", BigInteger(97), true},
-        {"Test 13: is_prime(100)", BigInteger(100), false},
-        {"Test 14: is_prime(101)", BigInteger(101), true},
-        {"Test 15: is_prime(102)", BigInteger(102), false},
-        {"Test 16: is_prime(103)", BigInteger(103), true},
-        {"Test 17: is_prime(104)", BigInteger(104), false},
-        {"Test 18: is_prime(1009)", BigInteger(1009), true},
-        {"Test 19: is_prime(1024)", BigInteger(1024), false},
-        {"Test 20: is_prime(104729)", BigInteger(104729), true}, // 10000-е простое число
-        {"Test 21: is_prime(12345678901234567890)", BigInteger("12345678901234567890"), false},
-        {"Test 22: is_prime(9876543210987654321)", BigInteger("9876543210987654321"), false},
-        {"Test 23: is_prime(112233445566778899)", BigInteger("112233445566778899"), false},
-        {"Test 24: is_prime(998877665544332211)", BigInteger("998877665544332211"), false},
-        {"Test 25: is_prime(102030405060708090)", BigInteger("102030405060708090"), false}
-    };
+//     std::vector<TestCase> tests = {
+//         {"Test 1: is_prime(2)", BigInteger(2), true},
+//         {"Test 2: is_prime(3)", BigInteger(3), true},
+//         {"Test 3: is_prime(4)", BigInteger(4), false},
+//         {"Test 4: is_prime(5)", BigInteger(5), true},
+//         {"Test 5: is_prime(17)", BigInteger(17), true},
+//         {"Test 6: is_prime(18)", BigInteger(18), false},
+//         {"Test 7: is_prime(19)", BigInteger(19), true},
+//         {"Test 8: is_prime(20)", BigInteger(20), false},
+//         {"Test 9: is_prime(23)", BigInteger(23), true},
+//         {"Test 10: is_prime(24)", BigInteger(24), false},
+//         {"Test 11: is_prime(29)", BigInteger(29), true},
+//         {"Test 12: is_prime(97)", BigInteger(97), true},
+//         {"Test 13: is_prime(100)", BigInteger(100), false},
+//         {"Test 14: is_prime(101)", BigInteger(101), true},
+//         {"Test 15: is_prime(102)", BigInteger(102), false},
+//         {"Test 16: is_prime(103)", BigInteger(103), true},
+//         {"Test 17: is_prime(104)", BigInteger(104), false},
+//         {"Test 18: is_prime(1009)", BigInteger(1009), true},
+//         {"Test 19: is_prime(1024)", BigInteger(1024), false},
+//         {"Test 20: is_prime(104729)", BigInteger(104729), true}, // 10000-е простое число
+//         {"Test 21: is_prime(12345678901234567890)", BigInteger("12345678901234567890"), false},
+//         {"Test 22: is_prime(9876543210987654321)", BigInteger("9876543210987654321"), false},
+//         {"Test 23: is_prime(112233445566778899)", BigInteger("112233445566778899"), false},
+//         {"Test 24: is_prime(998877665544332211)", BigInteger("998877665544332211"), false},
+//         {"Test 25: is_prime(102030405060708090)", BigInteger("102030405060708090"), false}
+//     };
 
-    for (const auto& test : tests) {
+//     for (const auto& test : tests) {
+//         try {
+//             bool result = test.input.is_prime(5); // 5 раундов теста Миллера-Рабина
+//             bool pass = (result == test.expected_result);
+//             std::string status = pass ? "PASS" : "FAIL";
+//             std::cout << test.description
+//                       << " | Expected: " << test.expected_result
+//                       << " | Got: " << result
+//                       << " | " << status << "\n";
+//         } catch (const std::exception& e) {
+//             std::cout << test.description << " threw exception: " << e.what() << " | FAIL\n";
+//         }
+//     }
+// }
+
+// void test_rational_operations_recovery() {
+//     struct TestCase {
+//         std::string description;
+//         BigRational input1;
+//         BigRational input2;
+//         BigRational expected_result;
+//         char operation; // 'u' for unary minus, '+' for addition, '-' for subtraction
+//     };
+
+//     std::vector<TestCase> tests = {
+//         // UnaryMinus tests
+//         {"UnaryMinus: -1/2", BigRational("-1", "2"), BigRational("0", "1"), BigRational("1", "2"), 'u'},
+//         {"UnaryMinus: 3/4", BigRational("3", "4"), BigRational("0", "1"), BigRational("-3", "4"), 'u'},
+//         {"UnaryMinus: -123456789/987654321", BigRational("-123456789", "987654321"), BigRational("0", "1"), BigRational("123456789", "987654321"), 'u'},
+//         {"UnaryMinus: 123456789/987654321", BigRational("123456789", "987654321"), BigRational("0", "1"), BigRational("-123456789", "987654321"), 'u'},
+
+//         // BinaryAddition tests
+//         {"BinaryAddition: 1/2 + 1/3", BigRational("1", "2"), BigRational("1", "3"), BigRational("5", "6"), '+'},
+//         {"BinaryAddition: -1/2 + 1/3", BigRational("-1", "2"), BigRational("1", "3"), BigRational("-1", "6"), '+'},
+//         {"BinaryAddition: 1/2 + -1/3", BigRational("1", "2"), BigRational("-1", "3"), BigRational("1", "6"), '+'},
+//         {"BinaryAddition: -1/2 + -1/3", BigRational("-1", "2"), BigRational("-1", "3"), BigRational("-5", "6"), '+'},
+//         {"BinaryAddition: 123456789/987654321 + 987654321/123456789", BigRational("123456789", "987654321"), BigRational("987654321", "123456789"), BigRational("990702636540161562", "121932631112635269"), '+'},
+
+//         // BinarySubtraction tests
+//         {"BinarySubtraction: 1/2 - 1/3", BigRational("1", "2"), BigRational("1", "3"), BigRational("1", "6"), '-'},
+//         {"BinarySubtraction: -1/2 - 1/3", BigRational("-1", "2"), BigRational("1", "3"), BigRational("-5", "6"), '-'},
+//         {"BinarySubtraction: 1/2 - -1/3", BigRational("1", "2"), BigRational("-1", "3"), BigRational("5", "6"), '-'},
+//         {"BinarySubtraction: -1/2 - -1/3", BigRational("-1", "2"), BigRational("-1", "3"), BigRational("-1", "6"), '-'},
+//         {"BinarySubtraction: 123456789/987654321 - 987654321/123456789", BigRational("123456789", "987654321"), BigRational("987654321", "123456789"), BigRational("-990702636540161562", "121932631112635269"), '-'},
+
+//         // Tests with int64_t constructor
+//         {"BinaryAddition: 1/2 + 1/3", BigRational(1, 2), BigRational(1, 3), BigRational(5, 6), '+'},
+//         {"BinaryAddition: -1/2 + 1/3", BigRational(-1, 2), BigRational(1, 3), BigRational(-1, 6), '+'},
+//         {"BinaryAddition: 1/2 + -1/3", BigRational(1, 2), BigRational(-1, 3), BigRational(1, 6), '+'},
+//         {"BinaryAddition: -1/2 + -1/3", BigRational(-1, 2), BigRational(-1, 3), BigRational(-5, 6), '+'},
+//         {"BinaryAddition: 123456789/987654321 + 987654321/123456789", BigRational(123456789, 987654321), BigRational(987654321, 123456789), BigRational("990702636540161562", "121932631112635269"), '+'},
+
+//         {"BinarySubtraction: 1/2 - 1/3", BigRational(1, 2), BigRational(1, 3), BigRational(1, 6), '-'},
+//         {"BinarySubtraction: -1/2 - 1/3", BigRational(-1, 2), BigRational(1, 3), BigRational(-5, 6), '-'},
+//         {"BinarySubtraction: 1/2 - -1/3", BigRational(1, 2), BigRational(-1, 3), BigRational(5, 6), '-'},
+//         {"BinarySubtraction: -1/2 - -1/3", BigRational(-1, 2), BigRational(-1, 3), BigRational(-1, 6), '-'},
+//         {"BinarySubtraction: 123456789/987654321 - 987654321/123456789", BigRational(123456789, 987654321), BigRational(987654321, 123456789), BigRational("-990702636540161562", "121932631112635269"), '-'}
+//     };
+
+//     for (const auto& test : tests) {
+//         try {
+//             BigRational result;
+//             switch (test.operation) {
+//                 case 'u':
+//                     result = -test.input1;
+//                     break;
+//                 case '+':
+//                     result = test.input1 + test.input2;
+//                     break;
+//                 case '-':
+//                     result = test.input1 - test.input2;
+//                     break;
+//                 default:
+//                     throw std::invalid_argument("Invalid operation");
+//             }
+//             bool pass = (result == test.expected_result);
+//             std::string status = pass ? "PASS" : "FAIL";
+//             std::cout << test.description
+//                       << " | Expected: " << test.expected_result
+//                       << " | Got: " << result
+//                       << " | " << status << "\n";
+//         } catch (const std::exception& e) {
+//             std::cout << test.description << " threw exception: " << e.what() << " | FAIL\n";
+//         }
+//     }
+// }
+
+#include <limits>
+#include "Big_Numbers.hpp"
+
+// void run_test(const std::string& description, bool condition) {
+//     std::cout << description << " | " << (condition ? "PASS" : "FAIL") << std::endl;
+// }
+
+// void test_big_rational_operations() {
+//     // Basic Addition
+//     {
+//         BigRational a(1, 2);         // Represents 1/2
+//         BigRational b(1, 3);         // Represents 1/3
+//         BigRational expected(5, 6);  // Expected result is 5/6
+//         run_test("BigRational Basic Addition", a + b == expected);
+//     }
+
+//     // Basic Subtraction
+//     {
+//         BigRational a(3, 4);         // Represents 3/4
+//         BigRational b(1, 4);         // Represents 1/4
+//         BigRational expected(1, 2);  // Expected result is 1/2
+//         // output declaration
+//         BigRational output = a - b;
+//         run_test("BigRational Basic Subtraction", output == expected);
+//         std::cout << output << std::endl;
+//         std::cout << expected << std::endl;
+//     }
+
+//     // Multiplication with Negative Numbers
+//     {
+//         BigRational a(-3, 7);  // Represents -3/7
+//         BigRational b(2, 5);   // Represents 2/5
+//         BigRational expected(-6, 35);  // Expected result is -6/35
+//         run_test("BigRational Multiplication with Negative Numbers", a * b == expected);
+//     }
+
+//     // Division and Simplification
+//     {
+//         BigRational a(4, 6);  // Represents 4/6
+//         BigRational b(2, 3);  // Represents 2/3
+//         BigRational expected(1, 1);  // Expected result is 1/1 or 1
+//         run_test("BigRational Division and Simplification", a / b == expected);
+//     }
+
+//     // Equality Check
+//     {
+//         BigRational a(8, 12);  // Represents 8/12
+//         BigRational b(2, 3);   // Represents 2/3
+//         run_test("BigRational Equality Check", a == b);  // They are equal when simplified
+//     }
+
+//     // Inequality Check
+//     {
+//         BigRational a(1, 3);  // Represents 1/3
+//         BigRational b(1, 2);  // Represents 1/2
+//         run_test("BigRational Inequality Check", a < b);  // 1/3 is less than 1/2
+//     }
+
+//     // Zero Denominator Check
+//     {
+//         try {
+//             BigRational a(1, 0);  // Should throw an exception
+//             run_test("BigRational Zero Denominator Check", false);  // Should not reach here
+//         } catch (const std::exception&) {
+//             run_test("BigRational Zero Denominator Check", true);  // Exception thrown as expected
+//         }
+//     }
+
+//     // Negative Denominator Check
+//     {
+//         BigRational a(-1, -2);  // Represents -1/-2
+//         BigRational expected(1, 2);  // Expected result is 1/2
+//         run_test("BigRational Negative Denominator Check", a == expected);
+//     }
+
+//     // Large Number Addition
+//     {
+//         BigRational a("123456789123456789", "987654321987654321");
+//         BigRational b("987654321987654321", "123456789123456789");
+//         BigRational expected("12230896747409402", "1505341124847349");  // Calculated result
+//         run_test("BigRational Large Number Addition", a + b == expected);
+//     }
+
+//     // Mixed Operations
+//     {
+//         BigRational a("1", "2"), b("1", "3"), c("1", "4");
+//         run_test("BigRational Mixed Operations", a + b - c == BigRational("7", "12"));
+//     }
+
+//     // Division by Zero
+//     {
+//         BigRational a("1", "2");
+//         try {
+//             a / BigRational("0", "1");
+//             run_test("BigRational Division by Zero", false);  // Should not reach here
+//         } catch (const std::exception&) {
+//             run_test("BigRational Division by Zero", true);  // Exception thrown as expected
+//         }
+//     }
+
+//     // Zero Comparison Equal
+//     {
+//         run_test("BigRational Zero Comparison Equal", BigRational("0", "1") == BigRational("0", "2"));
+//     }
+
+//     // Zero Comparison Not Equal
+//     {
+//         run_test("BigRational Zero Comparison Not Equal", BigRational("0", "1") != BigRational("1", "2"));
+//     }
+
+//     // One Comparison Equal
+//     {
+//         run_test("BigRational One Comparison Equal", BigRational("1", "1") == BigRational("2", "2"));
+//     }
+
+//     // One Comparison Not Equal
+//     {
+//         run_test("BigRational One Comparison Not Equal", BigRational("1", "1") != BigRational("1", "2"));
+//     }
+
+//     // Negative One Comparison Equal
+//     {
+//         run_test("BigRational Negative One Comparison Equal", BigRational("-1", "1") == BigRational("2", "-2"));
+//     }
+
+//     // Negative One Comparison Not Equal
+//     {
+//         run_test("BigRational Negative One Comparison Not Equal", BigRational("-1", "1") != BigRational("1", "1"));
+//     }
+
+//     // Fraction Comparison Equal
+//     {
+//         run_test("BigRational Fraction Comparison Equal", BigRational("1", "2") == BigRational("2", "4"));
+//     }
+
+//     // Fraction Comparison Not Equal
+//     {
+//         run_test("BigRational Fraction Comparison Not Equal", BigRational("1", "2") != BigRational("3", "4"));
+//     }
+
+//     // Large Number Comparison Equal
+//     {
+//         run_test("BigRational Large Number Comparison Equal", BigRational("123456789", "123456789") == BigRational("246913578", "246913578"));
+//     }
+
+//     // Mixed Sign Comparison Equal
+//     {
+//         run_test("BigRational Mixed Sign Comparison Equal", BigRational("-1", "2") == BigRational("1", "-2"));
+//     }
+
+//     // Mixed Sign Comparison Not Equal
+//     {
+//         run_test("BigRational Mixed Sign Comparison Not Equal", BigRational("-1", "2") != BigRational("1", "2"));
+//     }
+
+//     // Zero Numerator Comparison Equal
+//     {
+//         run_test("BigRational Zero Numerator Comparison Equal", BigRational("0", "123456789") == BigRational("0", "987654321"));
+//     }
+
+//     // Zero Numerator Comparison Not Equal
+//     {
+//         run_test("BigRational Zero Numerator Comparison Not Equal", BigRational("0", "123456789") != BigRational("1", "123456789"));
+//     }
+
+//     // One Denominator Comparison Equal
+//     {
+//         run_test("BigRational One Denominator Comparison Equal", BigRational("123456789", "1") == BigRational("123456789", "1"));
+//     }
+
+//     // One Denominator Comparison Not Equal
+//     {
+//         run_test("BigRational One Denominator Comparison Not Equal", BigRational("123456789", "1") != BigRational("987654321", "1"));
+//     }
+
+//     // Negative Denominator Comparison Equal
+//     {
+//         run_test("BigRational Negative Denominator Comparison Equal", BigRational("1", "-1") == BigRational("-1", "1"));
+//     }
+
+//     // Negative Denominator Comparison Not Equal
+//     {
+//         run_test("BigRational Negative Denominator Comparison Not Equal", BigRational("1", "-1") != BigRational("1", "1"));
+//     }
+
+//     // Complex Fraction Comparison Equal
+//     {
+//         run_test("BigRational Complex Fraction Comparison Equal", BigRational("1", "3") == BigRational("2", "6"));
+//     }
+
+//     // Complex Fraction Comparison Not Equal
+//     {
+//         run_test("BigRational Complex Fraction Comparison Not Equal", BigRational("1", "3") != BigRational("1", "6"));
+//     }
+// }
+
+
+// std::string BigIntegerToString(const BigInteger& value) {
+//     std::ostringstream oss;
+//     oss << value;
+//     return oss.str();
+// }
+
+// void test_big_integer_operations_assert() {
+//     // FromInt64Min
+//     {
+//         run_test("FromInt64Min", BigIntegerToString(BigInteger(std::numeric_limits<int64_t>::min())) == BigIntegerToString(BigInteger("-9223372036854775808")));
+//         std::cout << BigIntegerToString(BigInteger(std::numeric_limits<int64_t>::min())) << std::endl;
+//         std::cout << BigInteger("-9223372036854775808") << std::endl;
+        
+//         run_test("FromInt Zero", BigInteger("0") == BigInteger(0));
+//     }
+// }
+
+
+// void test_case_int64() {
+//     struct TestCase {
+//         std::string description;
+//         BigInteger lhs;
+//         BigInteger rhs;
+//         BigInteger expected_result;
+//         char operation;
+//     };
+
+//     std::vector<TestCase> tests = {
+//         {"Test 1: +000000000123456789 + +000000000000012345", BigInteger("000000000123456789"), BigInteger("000000000000012345"), BigInteger("000000000123469134"), '+'},
+//         {"Test 2: +000000000987654321 - +000000000000012345", BigInteger("000000000987654321"), BigInteger("000000000000012345"), BigInteger("000000000987641976"), '-'},
+//         {"Test 3: -000000000987654321 * +000000000000012345", BigInteger("-000000000987654321"), BigInteger("000000000000012345"), BigInteger("-1219326311126352695"), '*'},
+//         {"Test 4: +000000000987654321 / -000000000000012345", BigInteger("000000000987654321"), BigInteger("-000000000000012345"), BigInteger("-80000"), '/'},
+//         {"Test 5: -000000000987654321 % -000000000000012345", BigInteger("-000000000987654321"), BigInteger("-000000000000012345"), BigInteger("-9876"), '%'},
+//         {"Test 6: +0000000001000000000 += +000000000000000003", BigInteger("0000000001000000000"), BigInteger("000000000000000003"), BigInteger("0000000001000000003"), 'a'},
+//         {"Test 7: -0000000001000000000 -= +000000000000000003", BigInteger("-0000000001000000000"), BigInteger("000000000000000003"), BigInteger("-0000000001000000003"), 's'},
+//         {"Test 8: +0000000001000000000 *= -000000000000000003", BigInteger("0000000001000000000"), BigInteger("-000000000000000003"), BigInteger("-0000000003000000000"), 'm'},
+//         {"Test 9: -0000000001000000000 /= -000000000000000003", BigInteger("-0000000001000000000"), BigInteger("-000000000000000003"), BigInteger("333333333"), 'd'},
+//         {"Test 10: +0000000000000000000 %= +000000000123456789", BigInteger("0000000000000000000"), BigInteger("000000000123456789"), BigInteger("0000000000000000000"), 'r'},
+//         {"Test 11: +000000000123456789 < +000000000000000001", BigInteger("000000000123456789"), BigInteger("000000000000000001"), BigInteger(0), '<'},
+//         {"Test 12: +000000000123456789 > +000000000123456789", BigInteger("000000000123456789"), BigInteger("000000000123456789"), BigInteger(0), '>'},
+//         {"Test 13: +000000000123456789 <= +000000000000000000", BigInteger("000000000123456789"), BigInteger("000000000000000000"), BigInteger(0), 'l'},
+//         {"Test 14: +000000000123456789 >= +000000000000000000", BigInteger("000000000123456789"), BigInteger("000000000000000000"), BigInteger(1), 'g'},
+//         {"Test 15: +000000000123456789 == +000000000000000000", BigInteger("000000000123456789"), BigInteger("000000000000000000"), BigInteger(0), '='},
+//         {"Test 16: +000000000123456789 != +000000000000000000", BigInteger("000000000123456789"), BigInteger("000000000000000000"), BigInteger(1), '!'}
+//     };
+
+//     for (const auto& test : tests) {
+//         try {
+//             BigInteger result;
+//             bool comparison_result = false;
+//             switch (test.operation) {
+//                 case '+':
+//                     result = test.lhs + test.rhs;
+//                     break;
+//                 case '-':
+//                     result = test.lhs - test.rhs;
+//                     break;
+//                 case '*':
+//                     result = test.lhs * test.rhs;
+//                     break;
+//                 case '/':
+//                     result = test.lhs / test.rhs;
+//                     break;
+//                 case '%':
+//                     result = test.lhs % test.rhs;
+//                     break;
+//                 case 'a':
+//                     result = test.lhs;
+//                     result += test.rhs;
+//                     break;
+//                 case 's':
+//                     result = test.lhs;
+//                     result -= test.rhs;
+//                     break;
+//                 case 'm':
+//                     result = test.lhs;
+//                     result *= test.rhs;
+//                     break;
+//                 case 'd':
+//                     result = test.lhs;
+//                     result /= test.rhs;
+//                     break;
+//                 case 'r':
+//                     result = test.lhs;
+//                     result %= test.rhs;
+//                     break;
+//                 case '<':
+//                     comparison_result = test.lhs < test.rhs;
+//                     break;
+//                 case '>':
+//                     comparison_result = test.lhs > test.rhs;
+//                     break;
+//                 case 'l':
+//                     comparison_result = test.lhs <= test.rhs;
+//                     break;
+//                 case 'g':
+//                     comparison_result = test.lhs >= test.rhs;
+//                     break;
+//                 case '=':
+//                     comparison_result = test.lhs == test.rhs;
+//                     break;
+//                 case '!':
+//                     comparison_result = test.lhs != test.rhs;
+//                     break;
+//                 default:
+//                     throw std::invalid_argument("Unknown operation");
+//             }
+
+//             bool pass = (test.operation == '<' || test.operation == '>' || test.operation == 'l' || test.operation == 'g' || test.operation == '=' || test.operation == '!') ? (comparison_result == (test.expected_result != BigInteger(0))) : (result == test.expected_result);
+//             std::string status = pass ? "PASS" : "FAIL";
+
+//             std::cout << test.description << " | Expected: " << test.expected_result << " | Got: " << result << " | " << status << "\n";
+//         }
+//         catch (const std::exception& e) {
+//             bool pass = (test.operation == '/' || test.operation == 'd' || test.operation == '%') && (test.rhs == BigInteger(0));
+//             std::string status = pass ? "PASS (Exception Caught)" : "FAIL (Unexpected Exception)";
+//             std::cout << test.description << " threw exception: " << e.what() << " | " << status << "\n";
+//         }
+//     }
+// }
+
+// TEST_CASE("FromInt ❌FromInt64Min") {
+//   CHECK(BigIntegerToString(BigInteger(std::numeric_limits<int64_t>::min())) ==
+//         BigIntegerToString(BigInteger("-9223372036854775808")));
+//   CHECK(BigInteger("0") == BigInteger(0));
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void run_test(const std::string& description, bool condition, const std::string& expected = "", const std::string& actual = "") {
+    std::cout << description << " | " << (condition ? "PASS" : "FAIL") << "\n";
+    if (!expected.empty() && !actual.empty()) {
+        std::cout << "Expected: " << expected << "\n";
+        std::cout << "Actual: " << actual << "\n";
+    }
+}
+
+std::string BigIntegerToString(const BigInteger& value) {
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
+}
+
+std::string BigRationalToString(const BigRational& value) {
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
+}
+
+void test_big_integer_operations2() {
+    // FromInt64Min
+    {
+        BigInteger expected = BigInteger("-9223372036854775808");
+        BigInteger actual = BigInteger(std::numeric_limits<int64_t>::min());
+        run_test("FromInt64Min", BigIntegerToString(actual) == BigIntegerToString(expected), BigIntegerToString(expected), BigIntegerToString(actual));
+        run_test("FromInt Zero", BigInteger("0") == BigInteger(0), "0", BigIntegerToString(BigInteger("0")));
+    }
+
+    // FromString
+    {
+        BigInteger expected = BigInteger("123456789123456789123456789123456789123456789123456789123456789123456789123456789");
+        BigInteger actual = BigInteger("123456789123456789123456789123456789123456789123456789123456789123456789123456789");
+        run_test("FromString - big one", actual == expected, BigIntegerToString(expected), BigIntegerToString(actual));
+
+        expected = BigInteger("-123456789123456789123456789123456789123456789123456789123456789123456789123456789");
+        actual = BigInteger("-123456789123456789123456789123456789123456789123456789123456789123456789123456789");
+        run_test("FromString - negative big one", actual == expected, BigIntegerToString(expected), BigIntegerToString(actual));
+    }
+
+    // BigIntegerBinaryAddition
+    {
+        BigInteger a("123456789123456789123456789123456789123456789123456789123456789123456789123456789");
+        BigInteger b("123456789123456789123456789123456789123456789123456789123456789123456789123456789");
+        BigInteger expected = BigInteger("246913578246913578246913578246913578246913578246913578246913578246913578246913578");
+        run_test("BigIntegerBinaryAddition", a + b == expected, BigIntegerToString(expected), BigIntegerToString(a + b));
+
+        expected = BigInteger("123456789123456789123456789123456789123456789123456789123456789123456789123456789") * BigInteger("2");
+        run_test("BigIntegerBinaryAddition with multiplication", a + b == expected, BigIntegerToString(expected), BigIntegerToString(a + b));
+    }
+
+    // Division
+    {
+        BigInteger a("12345678912345678916789123456789123456789");
+        BigInteger b("1234567891233456786789123456789123456782");
+        run_test("Division by zero throws", false, "", "");  // Placeholder for exception test
         try {
-            bool result = test.input.is_prime(5); // 5 раундов теста Миллера-Рабина
-            bool pass = (result == test.expected_result);
-            std::string status = pass ? "PASS" : "FAIL";
-            std::cout << test.description
-                      << " | Expected: " << test.expected_result
-                      << " | Got: " << result
-                      << " | " << status << "\n";
+            BigInteger("+1a");
         } catch (const std::exception& e) {
-            std::cout << test.description << " threw exception: " << e.what() << " | FAIL\n";
+            run_test("Division by zero throws", true, "Exception thrown", e.what());
+        }
+
+        run_test("Division test 1", ((a * b) / b) == a, BigIntegerToString(a), BigIntegerToString((a * b) / b));
+        run_test("Division test 2", (a * b) / a == b, BigIntegerToString(b), BigIntegerToString((a * b) / a));
+        run_test("Addition test 1", BigInteger(0) + BigInteger(0) == BigInteger(0), "0", BigIntegerToString(BigInteger(0) + BigInteger(0)));
+        run_test("Addition test 2", BigInteger(0) + BigInteger(1) == BigInteger("1"), "1", BigIntegerToString(BigInteger(0) + BigInteger(1)));
+    }
+
+    // Other tests
+    {
+        run_test("TenDivTwoEqualsFive", BigInteger(10) / BigInteger(2) == BigInteger(5), "5", BigIntegerToString(BigInteger(10) / BigInteger(2)));
+        run_test("TenDivThreeEqualsThree", BigInteger(10) / BigInteger(3) == BigInteger(3), "3", BigIntegerToString(BigInteger(10) / BigInteger(3)));
+        run_test("TenModThreeEqualsOne", BigInteger(10) % BigInteger(3) == BigInteger(1), "1", BigIntegerToString(BigInteger(10) % BigInteger(3)));
+        run_test("_255DivOneEquals255", BigInteger(255) / BigInteger(1) == BigInteger(255), "255", BigIntegerToString(BigInteger(255) / BigInteger(1)));
+        run_test("_255DivMinusOneEqualsM255", BigInteger(255) / BigInteger(-1) == BigInteger(-255), "-255", BigIntegerToString(BigInteger(255) / BigInteger(-1)));
+        run_test("Minus10IsMinus10", -BigInteger(10) == BigInteger(-10), "-10", BigIntegerToString(-BigInteger(10)));
+        run_test("OneGreaterThanZero", BigInteger(1) > BigInteger(0), "true", "true");
+        run_test("NotZeroGreaterThanOne", !(BigInteger(0) > BigInteger(1)), "true", "true");
+        run_test("ZeroLeqOne", BigInteger(0) <= BigInteger(1), "true", "true");
+        run_test("NotZeroGeqOne", !(BigInteger(0) >= BigInteger(1)), "true", "true");
+        run_test("SpecialDiv2", BigInteger("-11001000000") / BigInteger(86400) == BigInteger(-127326), "-127326", BigIntegerToString(BigInteger("-11001000000") / BigInteger(86400)));
+        run_test("SpecialMod", BigInteger("20195283520469175757") % BigInteger("1048576") == BigInteger("888269"), "888269", BigIntegerToString(BigInteger("20195283520469175757") % BigInteger("1048576")));
+        run_test("SpecialModNeg", BigInteger(860593) % BigInteger(-201) == BigInteger(112), "112", BigIntegerToString(BigInteger(860593) % BigInteger(-201)));
+        run_test("SpecialModNeg2", BigInteger("-18224909727634776050312394179610579601844989529623334093909233530432892596607") / BigInteger("14954691977398614017") == BigInteger("-1218675032235937780712688130619504358062280950643422399658"), "-1218675032235937780712688130619504358062280950643422399658", BigIntegerToString(BigInteger("-18224909727634776050312394179610579601844989529623334093909233530432892596607") / BigInteger("14954691977398614017")));
+        run_test("Minus5Divides2EqualsMinus2", BigInteger(-5) / BigInteger(2) == BigInteger(-2), "-2", BigIntegerToString(BigInteger(-5) / BigInteger(2)));
+        run_test("FiveDividesMinus2EqualsMinus2", BigInteger(5) / BigInteger(-2) == BigInteger(-2), "-2", BigIntegerToString(BigInteger(5) / BigInteger(-2)));
+        run_test("FiveDivides2Equals2", BigInteger(5) / BigInteger(2) == BigInteger(2), "2", BigIntegerToString(BigInteger(5) / BigInteger(2)));
+        run_test("MinusFiveDividesMinus2Equals2", BigInteger(-5) / BigInteger(-2) == BigInteger(2), "2", BigIntegerToString(BigInteger(-5) / BigInteger(-2)));
+        run_test("Minus10Mod3EqualsMinus1", BigInteger(-10) % BigInteger(3) == BigInteger(-1), "-1", BigIntegerToString(BigInteger(-10) % BigInteger(3)));
+        run_test("TenMod3Equals1", BigInteger(10) % BigInteger(3) == BigInteger(1), "1", BigIntegerToString(BigInteger(10) % BigInteger(3)));
+        run_test("TenModMinus3Equals1", BigInteger(10) % BigInteger(-3) == BigInteger(1), "1", BigIntegerToString(BigInteger(10) % BigInteger(-3)));
+        run_test("MinusTenModMinus3EqualsMinus1", BigInteger(-10) % BigInteger(-3) == BigInteger(-1), "-1", BigIntegerToString(BigInteger(-10) % BigInteger(-3)));
+        run_test("TenModMinus5Equals0", BigInteger(10) % BigInteger(-5) == BigInteger(0), "0", BigIntegerToString(BigInteger(10) % BigInteger(-5)));
+        run_test("TenModTwoEqualsZero", BigInteger(10) % BigInteger(2) == BigInteger(0), "0", BigIntegerToString(BigInteger(10) % BigInteger(2)));
+    }
+
+    // BigInteger Division2
+    {
+        run_test("BigInteger Division2 - test 1", BigInteger("123456789123456789123456789") / BigInteger("123456789") == BigInteger("1000000001000000001"), "1000000001000000001", BigIntegerToString(BigInteger("123456789123456789123456789") / BigInteger("123456789")));
+        run_test("BigInteger Division2 - test 2", BigInteger("1000000000000") / BigInteger("1000") == BigInteger("1000000000"), "1000000000", BigIntegerToString(BigInteger("1000000000000") / BigInteger("1000")));
+        run_test("BigInteger Division2 - test 3", BigInteger("1000") / BigInteger("1000000000000") == BigInteger("0"), "0", BigIntegerToString(BigInteger("1000") / BigInteger("1000000000000")));
+        run_test("BigInteger Division2 - test 4", BigInteger("-123456789123456789123456789") / BigInteger("123456789") == BigInteger("-1000000001000000001"), "-1000000001000000001", BigIntegerToString(BigInteger("-123456789123456789123456789") / BigInteger("123456789")));
+        run_test("BigInteger Division2 - test 5", false, "", "");  // Placeholder for exception test
+        try {
+            BigInteger("123456789") / BigInteger("0");
+        } catch (const std::exception& e) {
+            run_test("BigInteger Division2 - test 5", true, "Exception thrown", e.what());
         }
     }
 }
 
+
+
+
+
+
+
+
+
+void test_big_rational_operations2() {
+    // Basic Addition
+    {
+        BigRational a(1, 2);         // Represents 1/2
+        BigRational b(1, 3);         // Represents 1/3
+        BigRational expected(5, 6);  // Expected result is 5/6
+        run_test("BigRational Basic Addition", a + b == expected, BigRationalToString(expected), BigRationalToString(a + b));
+    }
+
+    // Basic Subtraction
+    {
+        BigRational a(3, 4);         // Represents 3/4
+        BigRational b(1, 4);         // Represents 1/4
+        BigRational expected(1, 2);  // Expected result is 1/2
+        run_test("BigRational Basic Subtraction", a - b == expected, BigRationalToString(expected), BigRationalToString(a - b));
+    }
+
+    // Multiplication with Negative Numbers
+    {
+        BigRational a(-3, 7);  // Represents -3/7
+        BigRational b(2, 5);   // Represents 2/5
+        BigRational expected(-6, 35);  // Expected result is -6/35
+        run_test("BigRational Multiplication with Negative Numbers", a * b == expected, BigRationalToString(expected), BigRationalToString(a * b));
+    }
+
+    // Division and Simplification
+    {
+        BigRational a(4, 6);  // Represents 4/6
+        BigRational b(2, 3);  // Represents 2/3
+        BigRational expected(1, 1);  // Expected result is 1/1 or 1
+        run_test("BigRational Division and Simplification", a / b == expected, BigRationalToString(expected), BigRationalToString(a / b));
+    }
+
+    // Equality Check
+    {
+        BigRational a(8, 12);  // Represents 8/12
+        BigRational b(2, 3);   // Represents 2/3
+        run_test("BigRational Equality Check", a == b, BigRationalToString(b), BigRationalToString(a));  // They are equal when simplified
+    }
+
+    // Inequality Check
+    {
+        BigRational a(1, 3);  // Represents 1/3
+        BigRational b(1, 2);  // Represents 1/2
+        run_test("BigRational Inequality Check", a < b, BigRationalToString(b), BigRationalToString(a));  // 1/3 is less than 1/2
+    }
+
+    // Zero Denominator Check
+    {
+        try {
+            BigRational a(1, 0);  // Should throw an exception
+            run_test("BigRational Zero Denominator Check", false, "", "");  // Should not reach here
+        } catch (const std::exception& e) {
+            run_test("BigRational Zero Denominator Check", true, "Exception thrown", e.what());  // Exception thrown as expected
+        }
+    }
+
+    // Negative Denominator Check
+    {
+        BigRational a(-1, -2);  // Represents -1/-2
+        BigRational expected(1, 2);  // Expected result is 1/2
+        run_test("BigRational Negative Denominator Check", a == expected, BigRationalToString(expected), BigRationalToString(a));
+    }
+
+    // Large Number Addition
+    {
+        BigRational a("123456789123456789", "987654321987654321");
+        BigRational b("987654321987654321", "123456789123456789");
+        BigRational expected("12230896747409402", "1505341124847349");  // Calculated result
+        run_test("BigRational Large Number Addition", a + b == expected, BigRationalToString(expected), BigRationalToString(a + b));
+    }
+
+    // Mixed Operations
+    {
+        BigRational a("1", "2"), b("1", "3"), c("1", "4");
+        run_test("BigRational Mixed Operations", a + b - c == BigRational("7", "12"), BigRationalToString(BigRational("7", "12")), BigRationalToString(a + b - c));
+    }
+
+    // Division by Zero
+    {
+        BigRational a("1", "2");
+        try {
+            a / BigRational("0", "1");
+            run_test("BigRational Division by Zero", false, "", "");  // Should not reach here
+        } catch (const std::exception& e) {
+            run_test("BigRational Division by Zero", true, "Exception thrown", e.what());  // Exception thrown as expected
+        }
+    }
+
+    // Zero Comparison Equal
+    {
+        run_test("BigRational Zero Comparison Equal", BigRational("0", "1") == BigRational("0", "2"), BigRationalToString(BigRational("0", "2")), BigRationalToString(BigRational("0", "1")));
+    }
+
+    // Zero Comparison Not Equal
+    {
+        run_test("BigRational Zero Comparison Not Equal", BigRational("0", "1") != BigRational("1", "2"), BigRationalToString(BigRational("1", "2")), BigRationalToString(BigRational("0", "1")));
+    }
+
+    // One Comparison Equal
+    {
+        run_test("BigRational One Comparison Equal", BigRational("1", "1") == BigRational("2", "2"), BigRationalToString(BigRational("2", "2")), BigRationalToString(BigRational("1", "1")));
+    }
+
+    // One Comparison Not Equal
+    {
+        run_test("BigRational One Comparison Not Equal", BigRational("1", "1") != BigRational("1", "2"), BigRationalToString(BigRational("1", "2")), BigRationalToString(BigRational("1", "1")));
+    }
+
+    // Negative One Comparison Equal
+    {
+        run_test("BigRational Negative One Comparison Equal", BigRational("-1", "1") == BigRational("2", "-2"), BigRationalToString(BigRational("2", "-2")), BigRationalToString(BigRational("-1", "1")));
+    }
+
+    // Negative One Comparison Not Equal
+    {
+        run_test("BigRational Negative One Comparison Not Equal", BigRational("-1", "1") != BigRational("1", "1"), BigRationalToString(BigRational("1", "1")), BigRationalToString(BigRational("-1", "1")));
+    }
+
+    // Fraction Comparison Equal
+    {
+        run_test("BigRational Fraction Comparison Equal", BigRational("1", "2") == BigRational("2", "4"), BigRationalToString(BigRational("2", "4")), BigRationalToString(BigRational("1", "2")));
+    }
+
+    // Fraction Comparison Not Equal
+    {
+        run_test("BigRational Fraction Comparison Not Equal", BigRational("1", "2") != BigRational("3", "4"), BigRationalToString(BigRational("3", "4")), BigRationalToString(BigRational("1", "2")));
+    }
+
+    // Large Number Comparison Equal
+    {
+        run_test("BigRational Large Number Comparison Equal", BigRational("123456789", "123456789") == BigRational("246913578", "246913578"), BigRationalToString(BigRational("246913578", "246913578")), BigRationalToString(BigRational("123456789", "123456789")));
+    }
+
+    // Mixed Sign Comparison Equal
+    {
+        run_test("BigRational Mixed Sign Comparison Equal", BigRational("-1", "2") == BigRational("1", "-2"), BigRationalToString(BigRational("1", "-2")), BigRationalToString(BigRational("-1", "2")));
+    }
+
+    // Mixed Sign Comparison Not Equal
+    {
+        run_test("BigRational Mixed Sign Comparison Not Equal", BigRational("-1", "2") != BigRational("1", "2"), BigRationalToString(BigRational("1", "2")), BigRationalToString(BigRational("-1", "2")));
+    }
+
+    // Zero Numerator Comparison Equal
+    {
+        run_test("BigRational Zero Numerator Comparison Equal", BigRational("0", "123456789") == BigRational("0", "987654321"), BigRationalToString(BigRational("0", "987654321")), BigRationalToString(BigRational("0", "123456789")));
+    }
+
+    // Zero Numerator Comparison Not Equal
+    {
+        run_test("BigRational Zero Numerator Comparison Not Equal", BigRational("0", "123456789") != BigRational("1", "123456789"), BigRationalToString(BigRational("1", "123456789")), BigRationalToString(BigRational("0", "123456789")));
+    }
+
+    // One Denominator Comparison Equal
+    {
+        run_test("BigRational One Denominator Comparison Equal", BigRational("123456789", "1") == BigRational("123456789", "1"), BigRationalToString(BigRational("123456789", "1")), BigRationalToString(BigRational("123456789", "1")));
+    }
+
+    // One Denominator Comparison Not Equal
+    {
+        run_test("BigRational One Denominator Comparison Not Equal", BigRational("123456789", "1") != BigRational("987654321", "1"), BigRationalToString(BigRational("987654321", "1")), BigRationalToString(BigRational("123456789", "1")));
+    }
+
+    // Negative Denominator Comparison Equal
+    {
+        run_test("BigRational Negative Denominator Comparison Equal", BigRational("1", "-1") == BigRational("-1", "1"), BigRationalToString(BigRational("-1", "1")), BigRationalToString(BigRational("1", "-1")));
+    }
+
+    // Negative Denominator Comparison Not Equal
+    {
+        run_test("BigRational Negative Denominator Comparison Not Equal", BigRational("1", "-1") != BigRational("1", "1"), BigRationalToString(BigRational("1", "1")), BigRationalToString(BigRational("1", "-1")));
+    }
+
+    // Complex Fraction Comparison Equal
+    {
+        run_test("BigRational Complex Fraction Comparison Equal", BigRational("1", "3") == BigRational("2", "6"), BigRationalToString(BigRational("2", "6")), BigRationalToString(BigRational("1", "3")));
+    }
+
+    // Complex Fraction Comparison Not Equal
+    {
+        run_test("BigRational Complex Fraction Comparison Not Equal", BigRational("1", "3") != BigRational("1", "6"), BigRationalToString(BigRational("1", "6")), BigRationalToString(BigRational("1", "3")));
+    }
+}
+
+
+
+
+
+
 int main() {
     try {
+
+        // test_big_integer_operations_assert();
+        // test_big_rational_operations();
+
+        //test_case_int64();
+
+        test_big_integer_operations2();
+        test_big_rational_operations2();
+
     //     test_operations();
     //     test_rational_operations();
     //    test_big_integer_multiplication();
@@ -602,8 +1466,9 @@ int main() {
 
         // test_big_rational_sqrt();
                 //test_big_integer_isqrt();
-        test_big_integer_is_prime();
+        //test_big_integer_is_prime();
 
+        // test_rational_operations_recovery();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

@@ -254,7 +254,7 @@ public:
             return *this;
         }
 
-        if (digits_of_BN[0] == 0 && digits_of_BN.size() == 1) {
+        if (!digits_of_BN.empty() && digits_of_BN[0] == 0 && digits_of_BN.size() == 1) {
             first_sign_is_negative = false;
             return *this;
         } else if (digits_of_BN[0] == 1 && digits_of_BN.size() == 1) {
@@ -732,11 +732,11 @@ public:
     }
     // constructor with int parameters
     BigRational(int64_t a, int64_t b){
+        if ( b == 0)
+                throw std::invalid_argument("Denominator can't == 0"); 
+
         Numerator = a;
         Denominator = b;
-
-        if ( b == 0)
-            throw std::invalid_argument("Denominator can't == 0"); 
 
         if (a == 0 && b == 0) {
             first_sign_is_negative_RN = false;
@@ -822,14 +822,15 @@ public:
             // std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
             // std::cout << "rhs.Numerator: " << rhs.Numerator << " and rhs.Denominator: " << rhs.Denominator << std::endl;
             //Numerator = (Numerator * (nok / Denominator)) + (rhs.Numerator * (nok / rhs.Denominator));
-            if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
-                Denominator = -nok;
-            } else {Denominator = nok;}
+            // if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
+            //     Denominator = -nok;
+            // } else {Denominator = nok;}
+            Denominator = nok;
 
         } else {Numerator += rhs.Numerator;}
 
         //std::cout << "result: " << *this <<  " and " <<  first_sign_is_negative_RN << std::endl;
-       // normalize();
+        normalize();
 
         return *this;
     }
@@ -885,16 +886,18 @@ public:
             BigInteger nok = (Denominator * rhs.Denominator) / nsd;
             Numerator = (Numerator * (nok / Denominator)) - (rhs.Numerator * (nok / rhs.Denominator));
 
-            if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
-                Denominator = -nok;
-            } else {Denominator = nok;}
+            // if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
+            //     Denominator = -nok;
+            // } else {Denominator = nok;}
+
+            Denominator = nok;
             
         } else {
             Numerator -= rhs.Numerator;
             if (Numerator < 0) {first_sign_is_negative_RN = true;} 
             else { first_sign_is_negative_RN = false;}
         }
-        //normalize();
+        normalize();
         
         return *this;
     }
@@ -1032,7 +1035,9 @@ inline bool operator>=(const BigRational& lhs, const BigRational& rhs) {
 }
 
 inline std::ostream& operator<<(std::ostream& lhs, const BigRational& rhs) {
+    // normalize();
     if (rhs.Denominator == BigInteger(1)) lhs << rhs.Numerator;
+    else if (rhs.Numerator == BigInteger(0)) lhs << 0;
     else lhs << rhs.Numerator << '/' << rhs.Denominator;
 
     return lhs;
