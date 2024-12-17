@@ -1436,20 +1436,316 @@ void test_big_rational_operations2() {
 }
 
 
+void test_unarny_op_and_sub_add_op() {
+    struct TestCase {
+        std::string description;
+        BigRational lhs;
+        BigRational rhs;
+        BigRational expected_result;
+        char operation; // 'u' for unary minus, '+' for addition, '-' for subtraction
+    };
+
+std::vector<TestCase> tests = {
+    // Unary Minus tests
+    {"UnaryMinus: -1/2", BigRational("1", "2"), BigRational(), BigRational("-1", "2"), 'u'},
+    {"UnaryMinus: -3/4", BigRational("3", "4"), BigRational(), BigRational("-3", "4"), 'u'},
+    {"UnaryMinus: -0/1", BigRational("0", "1"), BigRational(), BigRational("0", "1"), 'u'},
+    {"UnaryMinus: -(-1/2)", BigRational("-1", "2"), BigRational(), BigRational("1", "2"), 'u'},
+    {"UnaryMinus: -(-3/-4)", BigRational("-3", "-4"), BigRational(), BigRational("3", "4"), 'u'},
+
+    // Addition tests
+    {"Addition: 1/2 + 1/3", BigRational("1", "2"), BigRational("1", "3"), BigRational("5", "6"), '+'},
+    {"Addition: -1/2 + 1/3", BigRational("-1", "2"), BigRational("1", "3"), BigRational("-1", "6"), '+'},
+    {"Addition: 1/2 + -1/3", BigRational("1", "2"), BigRational("-1", "3"), BigRational("1", "6"), '+'},
+    {"Addition: -1/2 + -1/3", BigRational("-1", "2"), BigRational("-1", "3"), BigRational("-5", "6"), '+'},
+    {"Addition: 0/1 + 1/3", BigRational("0", "1"), BigRational("1", "3"), BigRational("1", "3"), '+'},
+    {"Addition: -1/-2 + 1/3", BigRational("-1", "-2"), BigRational("1", "3"), BigRational("5", "6"), '+'},
+    {"Addition: 1/-2 + -1/3", BigRational("1", "-2"), BigRational("-1", "3"), BigRational("-1", "6"), '+'},
+
+    // Subtraction tests
+    {"Subtraction: 1/2 - 1/3", BigRational("1", "2"), BigRational("1", "3"), BigRational("1", "6"), '-'},
+    {"Subtraction: -1/2 - 1/3", BigRational("-1", "2"), BigRational("1", "3"), BigRational("-5", "6"), '-'},
+    {"Subtraction: 1/2 - -1/3", BigRational("1", "2"), BigRational("-1", "3"), BigRational("5", "6"), '-'},
+    {"Subtraction: -1/2 - -1/3", BigRational("-1", "2"), BigRational("-1", "3"), BigRational("-1", "6"), '-'},
+    {"Subtraction: 0/1 - 1/3", BigRational("0", "1"), BigRational("1", "3"), BigRational("-1", "3"), '-'},
+    {"Subtraction: -1/-2 - 1/3", BigRational("-1", "-2"), BigRational("1", "3"), BigRational("1", "6"), '-'},
+    {"Subtraction: 1/-2 - -1/3", BigRational("1", "-2"), BigRational("-1", "3"), BigRational("-1", "6"), '-'}
+};
+
+    for (const auto& test : tests) {
+        BigRational result;
+        if (test.operation == 'u') {
+            result = -test.lhs;
+        } else if (test.operation == '+') {
+            result = test.lhs + test.rhs;
+        } else if (test.operation == '-') {
+            result = test.lhs - test.rhs;
+        }
+        bool pass = (result == test.expected_result);
+        std::string status = pass ? "PASS" : "FAIL";
+        std::cout << test.description
+                  << " | Expected: " << test.expected_result
+                  << " | Got: " << result
+                  << " | " << status << "\n";
+    }
+}
+
+
+void test_input_operator() {
+    struct TestCase {
+        std::string input;
+        std::string expected_output;
+        bool should_fail;
+    };
+
+    std::vector<TestCase> tests = {
+        {"12345", "12345", false},
+        {"  12345  ", "12345", false},
+        {"-12345", "-12345", false},
+        {"  -12345  ", "-12345", false},
+        {"+12345", "12345", false},
+        {"  +12345  ", "12345", false},
+        {"0", "0", false},
+        {"  0  ", "0", false},
+        {"-0", "0", false},
+        {"  -0  ", "0", false},
+        {"xyz", "", true},
+        {"-xyz", "", true},
+        {"", "", true},
+        {"-", "", true},
+        {"  -  ", "", true}
+    };
+
+    for (const auto& test : tests) {
+        std::istringstream iss(test.input);
+        BigInteger value;
+        iss >> value;
+
+        std::cout << "Testing input: \"" << test.input << "\"\n";
+
+        if (test.should_fail) {
+            if (iss.fail()) {
+                std::cout << "Test passed for input: \"" << test.input << "\" (expected fail)\n";
+            } else {
+                std::cout << "Test failed for input: \"" << test.input << "\" (expected fail)\n";
+            }
+        } else {
+            if (iss.fail()) {
+                std::cout << "Test failed for input: \"" << test.input << "\" (unexpected fail)\n";
+            } else {
+                std::ostringstream oss;
+                oss << value;
+                if (oss.str() == test.expected_output) {
+                    std::cout << "Test passed for input: \"" << test.input << "\"\n";
+                } else {
+                    std::cout << "Test failed for input: \"" << test.input << "\" (expected: \"" << test.expected_output << "\", got: \"" << oss.str() << "\")\n";
+                }
+            }
+        }
+    }
+}
 
 
 
+void test_input_operator_bigrational() {
+    struct TestCase {
+        std::string input;
+        std::string expected_output;
+        bool should_fail;
+    };
+
+std::vector<TestCase> tests = {
+        {"123/456", "41/152", false}, // Expected output is the reduced form
+        {"  123  /  456  ", "41/152", false}, // Expected output is the reduced form
+        {"-123/456", "-41/152", false}, // Expected output is the reduced form
+        {"  -123  /  456  ", "-41/152", false}, // Expected output is the reduced form
+        {"123", "123", false},
+        {"  123  ", "123", false},
+        {"0/1", "0", false},
+        {"  0  /  1  ", "0", false},
+        {"-0/1", "0", false},
+        {"  -0  /  1  ", "0", false},
+        {"123abc", "123", false},
+        {"-123abc", "-123", false},
+        {"xyz", "", true},
+        {"-xyz", "", true},
+        {"", "", true},
+        {"-", "", true},
+        {"  -  ", "", true}
+    };
+
+    for (const auto& test : tests) {
+        std::istringstream iss(test.input);
+        BigRational value;
+        iss >> value;
+
+        //std::cout << "Testing input: \"" << test.input << "\"\n";
+
+        if (test.should_fail) {
+            if (iss.fail()) {
+                std::cout << "Test passed for input: \"" << test.input << "\" (expected fail)\n";
+            } else {
+                std::cout << "Test failed for input: \"" << test.input << "\" (expected fail)\n";
+            }
+        } else {
+            if (iss.fail()) {
+                std::cout << "Test failed for input: \"" << test.input << "\" (unexpected fail)\n";
+            } else {
+                std::ostringstream oss;
+                oss << value;
+                if (oss.str() == test.expected_output) {
+                    std::cout << "Test passed for input: \"" << test.input << "\"\n";
+                } else {
+                    std::cout << "Test failed for input: \"" << test.input << "\" (expected: \"" << test.expected_output << "\", got: \"" << oss.str() << "\")\n";
+                }
+            }
+        }
+    }
+}
+
+
+void test_big_integer_arithmetics() {
+    // Test cases
+    struct TestCase {
+        std::string description;
+        BigInteger lhs;
+        BigInteger rhs;
+        BigInteger expected_result;
+        std::string operation; // '%' for modulus, '/' for division, 'u' for unary minus, '>' for greater than, '<=' for less than or equal, '>=' for greater than or equal
+    };
+
+    std::vector<TestCase> tests = {
+        {"TenModThreeEqualsOne", BigInteger(10), BigInteger(3), BigInteger(1), "%"},
+        {"_255DivOneEquals255", BigInteger(255), BigInteger(1), BigInteger(255), "/"},
+        {"_255DivMinusOneEqualsM255", BigInteger(255), BigInteger(-1), BigInteger(-255), "/"},
+        {"Minus10IsMinus10", BigInteger(10), BigInteger(), BigInteger(-10), "u"},
+        {"OneGreaterThanZero", BigInteger(1), BigInteger(0), BigInteger(1), ">"},
+        {"NotZeroGreaterThanOne", BigInteger(0), BigInteger(1), BigInteger(0), ">"},
+        {"ZeroLeqOne", BigInteger(0), BigInteger(1), BigInteger(1), "<="},
+        {"NotZeroGeqOne", BigInteger(0), BigInteger(1), BigInteger(0), ">="},
+        {"SpecialDiv2", BigInteger("-11001000000"), BigInteger(86400), BigInteger(-127326), "/"},
+        {"SpecialMod", BigInteger("20195283520469175757"), BigInteger("1048576"), BigInteger("888269"), "%"},
+        {"SpecialModNeg", BigInteger(860593), BigInteger(-201), BigInteger(112), "%"},
+        {"SpecialModNeg2", BigInteger("-18224909727634776050312394179610579601844989529623334093909233530432892596607"), BigInteger("14954691977398614017"), BigInteger("-1218675032235937780712688130619504358062280950643422399658"), "/"},
+        {"Minus5Divides2EqualsMinus2", BigInteger(-5), BigInteger(2), BigInteger(-2), "/"},
+        {"FiveDividesMinus2EqualsMinus2", BigInteger(5), BigInteger(-2), BigInteger(-2), "/"},
+        {"FiveDivides2Equals2", BigInteger(5), BigInteger(2), BigInteger(2), "/"},
+        {"MinusFiveDividesMinus2Equals2", BigInteger(-5), BigInteger(-2), BigInteger(2), "/"},
+        {"Minus10Mod3EqualsMinus1", BigInteger(-10), BigInteger(3), BigInteger(-1), "%"},
+        {"TenMod3Equals1", BigInteger(10), BigInteger(3), BigInteger(1), "%"},
+        {"TenModMinus3Equals1", BigInteger(10), BigInteger(-3), BigInteger(1), "%"},
+        {"MinusTenModMinus3EqualsMinus1", BigInteger(-10), BigInteger(-3), BigInteger(-1), "%"},
+        {"TenModMinus5Equals0", BigInteger(10), BigInteger(-5), BigInteger(0), "%"}
+    };
+
+    for (const auto& test : tests) {
+        BigInteger result;
+        if (test.operation == "%") {
+            result = test.lhs % test.rhs;
+        } else if (test.operation == "/") {
+            result = test.lhs / test.rhs;
+        } else if (test.operation == "u") {
+            result = -test.lhs;
+        } else if (test.operation == ">") {
+            assert((test.lhs > test.rhs) == (test.expected_result == BigInteger(1)));
+            continue;
+        } else if (test.operation == "<=") {
+            assert((test.lhs <= test.rhs) == (test.expected_result == BigInteger(1)));
+            continue;
+        } else if (test.operation == ">=") {
+            assert((test.lhs >= test.rhs) == (test.expected_result == BigInteger(1)));
+            continue;
+        }
+
+        bool pass = (result == test.expected_result);
+        std::string status = pass ? "PASS" : "FAIL";
+        std::cout << test.description
+                  << " | Expected: " << test.expected_result
+                  << " | Got: " << result
+                  << " | " << status << "\n";
+        assert(pass);
+    }
+}
+
+void test_big_rational_arithmetics_SJJSJS() {
+    // Test cases
+    struct TestCase {
+        std::string description;
+        BigRational lhs;
+        BigRational rhs;
+        BigRational expected_result;
+        std::string operation; // 'i' for integer, 'r' for rational, 'u' for unary minus
+    };
+
+    std::vector<TestCase> tests = {
+        {"FromInt - integer", BigRational(10, 1), BigRational(), BigRational(10, 1), "i"},
+        {"FromInt - rational", BigRational(10, 2), BigRational(), BigRational(5, 1), "r"},
+        {"UnaryMinus", BigRational(10, 1), BigRational(), BigRational(-10, 1), "u"},
+    };
+
+    for (const auto& test : tests) {
+        BigRational result;
+        if (test.operation == "i") {
+            result = test.lhs;
+        } else if (test.operation == "r") {
+            result = test.lhs;
+        } else if (test.operation == "u") {
+            result = -test.lhs;
+        }
+
+        bool pass = (result == test.expected_result);
+        std::string status = pass ? "PASS" : "FAIL";
+        std::cout << test.description
+                  << " | Expected: " << test.expected_result
+                  << " | Got: " << result
+                  << " | " << status << "\n";
+        assert(pass);
+    }
+}
 
 int main() {
+    BigRational new1(-0, 1);
+    BigRational new2(-100, -10);
+    BigRational new3("000004234323432444564355555555555555555557", "-000003337");
+
+    std::cout << new1 << std::endl;
+    std::cout << new2 << std::endl;
+    std::cout << new3 << std::endl;
+
+    std::cout << -new1 << std::endl;
+    std::cout << -new2 << std::endl;
+    std::cout << -new3 << std::endl;
+
+    BigRational testerr(-10, 1);
+    BigRational testerr2("-1", "1");
+
+    std::cout << testerr << ' ' << testerr2 << std::endl;
+
+    std::cout << testerr2 - testerr  << "   " <<  testerr << std::endl;
+
+    BigInteger eee("255");
+    BigInteger ee("-1");
+
+    std::cout << eee << ' ' << ee << std::endl;
+
+    std::cout << eee / ee << std::endl;
     try {
+        test_big_rational_arithmetics_SJJSJS();
+
+       // test_big_integer_arithmetics();
+
+
+       //// test_input_operator();
+        //test_input_operator_bigrational();
 
         // test_big_integer_operations_assert();
         // test_big_rational_operations();
 
         //test_case_int64();
+        //////////////test_unarny_op_and_sub_add_op();
 
-        test_big_integer_operations2();
-        test_big_rational_operations2();
+        // test_big_integer_operations2();
+        // test_big_rational_operations2();
 
     //     test_operations();
     //     test_rational_operations();

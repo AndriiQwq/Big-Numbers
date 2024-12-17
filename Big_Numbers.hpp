@@ -10,11 +10,13 @@
 #include <cctype>
 #include <limits> 
 #include <random>
+#include <sstream>
+#include <algorithm>
 // #include <cmath>
 
 // if you do not plan to implement bonus, you can delete those lines
 // or just keep them as is and do not define the macro to 1
-#define SUPPORT_IFSTREAM 0
+#define SUPPORT_IFSTREAM 1
 #define SUPPORT_MORE_OPS 1
 #define SUPPORT_EVAL 0 // special bonus
 
@@ -240,6 +242,9 @@ public:
         //     normalize();
         // else if (rhs.digits_of_BN[0] == 0 && rhs.digits_of_BN.size() == 1)
         //     normalize();
+        if (digits_of_BN.empty() || rhs.digits_of_BN.empty()) {
+            throw std::invalid_argument("Invalid BigInteger");
+        }   
     
 
         if (rhs.digits_of_BN[0] == 0 && rhs.digits_of_BN.size() == 1) {
@@ -313,8 +318,15 @@ public:
         if (rhs.digits_of_BN.size() == 1 && rhs.digits_of_BN[0] == 0)
             throw std::invalid_argument("Division by zero");
 
-        if (rhs.digits_of_BN.size() == 1 && rhs.digits_of_BN[0] == 1)
-            return *this;
+        if (rhs.digits_of_BN.size() == 1 && rhs.digits_of_BN[0] == 1) {
+            if (rhs.first_sign_is_negative != first_sign_is_negative){
+                *this = -*this;
+                return *this;
+            } else {
+                return *this;
+            }
+        }
+
 
         if (digits_of_BN.size() < rhs.digits_of_BN.size()) {
             digits_of_BN.clear();
@@ -585,7 +597,7 @@ bool BigInteger::is_prime(size_t k) const {
 }
 
 inline std::ostream &operator<<(std::ostream &lhs, const BigInteger &rhs) {
-    if (rhs.first_sign_is_negative) lhs << '-';
+    if (rhs.first_sign_is_negative && rhs != 0) lhs << '-';
     // else {
     //     lhs << '+';//???
     // }
@@ -702,7 +714,59 @@ inline bool operator>=(const BigInteger& lhs, const BigInteger& rhs) {
 #if SUPPORT_IFSTREAM == 1
 // this should behave exactly the same as reading int with respect to 
 // whitespace, consumed characters etc...
-inline std::istream& operator>>(std::istream& lhs, BigInteger& rhs); // bonus
+// bonus
+inline std::istream& operator>>(std::istream& lhs, BigInteger& rhs) {
+    std::string input;
+    lhs >> input;
+
+    if (input.empty() || (input.size() == 1 && (input[0] == '-' || input[0] == '+'))) {
+        lhs.setstate(std::ios::failbit);
+        return lhs;
+    }
+
+    //remove whitespaces, and normalize
+    for (size_t i = 0; i < input.size(); ++i) {
+        if ( input[i] == '+' || input[i] == '-') {
+            if (i != 0) {
+                lhs.setstate(std::ios::failbit);
+                return lhs;
+            } else continue;
+        }
+      
+        if (input[i] == ' ') {
+            input.erase(i, 1);
+            --i;
+            continue;
+        }
+
+        if (input[i] < '0' || input[i] > '9') {
+            lhs.setstate(std::ios::failbit);
+            //std::cout << "failbit" << '\n';
+            return lhs;
+        }
+    }
+
+    while (input.size() > 1 && input[0] == '0')
+        input.erase(0, 1);
+
+    if (input.size() == 1 && input[0] == '0') 
+        if (input[0] == '-') 
+            input = "0";
+
+    if (input.empty() || (input.size() == 1 && (input[0] == '-' || input[0] == '+'))) {
+        lhs.setstate(std::ios::failbit);
+        return lhs;
+    }
+
+    //std::cout << "input_size: " << input.size() << '\n';
+
+    try {
+        rhs = BigInteger(input);
+    } catch (const std::invalid_argument &e) {
+        lhs.setstate(std::ios::failbit);
+    }
+    return lhs;
+}
 #endif
 
 /** Rational part*/
@@ -735,17 +799,25 @@ public:
         if ( b == 0)
                 throw std::invalid_argument("Denominator can't == 0"); 
 
-        Numerator = a;
-        Denominator = b;
+        Numerator = (a);
+        Denominator = (b);
 
-        if (a == 0 && b == 0) {
+        if (Numerator == 0) {
             first_sign_is_negative_RN = false;
-        }else {
-            if (Numerator < 0) first_sign_is_negative_RN = true;
-            else first_sign_is_negative_RN = false;
+            Denominator = 1;
+        } else {
+            if (Denominator < 0) {
+                Numerator = -Numerator;
+                Denominator = -Denominator;
+            }
+            first_sign_is_negative_RN = (Numerator < 0);
         }
 
+        ///std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
+        
         normalize();
+                //std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
+
     }
     // constructor with str parameters
     BigRational(const std::string& a, const std::string& b) {
@@ -843,12 +915,19 @@ public:
 
         if (!first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
             // case 2
-            *this += -rhs;
+            BigRational temp_rhs = rhs;
+            temp_rhs.first_sign_is_negative_RN = false;
+                        // std::cout << "result: " << *this <<  " and " <<  temp_rhs << std::endl;
+
+            *this += temp_rhs;
+            // std::cout << "case 2!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
             return *this;
         } else if (first_sign_is_negative_RN && !rhs.first_sign_is_negative_RN) {
             // case 3
            // std::cout << "case 3!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-            *this += -rhs;
+            BigRational temp_rhs = rhs;
+            temp_rhs.first_sign_is_negative_RN = true;
+            *this += -temp_rhs;
             return *this;
         } else if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
             // case 4
@@ -856,8 +935,13 @@ public:
             BigRational temp_this = *this;
             temp_rhs.first_sign_is_negative_RN = false; // temp_this -> +
             temp_rhs.Numerator = -temp_rhs.Numerator;
+            
+            temp_this.first_sign_is_negative_RN = false; // temp_this -> +
+            temp_this.Numerator = -temp_this.Numerator;
 
-            *this = temp_rhs + temp_this;
+            //std::cout << "temp_rhs: " << temp_rhs << " and temp_this: " << temp_this << std::endl;
+
+            *this = temp_rhs - temp_this;
 
             //             first_sign_is_negative = false;
             // *this = -rhs - *this;
@@ -945,6 +1029,15 @@ private:
             first_sign_is_negative_RN = false;
         }
 
+        // if (Numerator == Denominator) {
+        //     Numerator = 1;
+        //     Denominator = 1;
+        // } else if (Numerator == -Denominator) {
+        //     Numerator = -1;
+        //     Denominator = 1;
+        // }
+        if (Denominator == 1) return;
+
         BigInteger nsd = find_nsd(Numerator, Denominator);
         Numerator /= nsd;
         Denominator /= nsd;
@@ -954,6 +1047,7 @@ private:
             Numerator = -Numerator;
             Denominator = -Denominator;
         }
+        
 
         // while (true) {
         //     // While we can devide two part by NSD 
@@ -1035,9 +1129,10 @@ inline bool operator>=(const BigRational& lhs, const BigRational& rhs) {
 }
 
 inline std::ostream& operator<<(std::ostream& lhs, const BigRational& rhs) {
+    //if ( rhs.Numerator == 0 && rhs.Numerator.
     // normalize();
-    if (rhs.Denominator == BigInteger(1)) lhs << rhs.Numerator;
-    else if (rhs.Numerator == BigInteger(0)) lhs << 0;
+    if (rhs.Denominator == 1) lhs << rhs.Numerator;
+    else if (rhs.Numerator == 0) lhs << 0;
     else lhs << rhs.Numerator << '/' << rhs.Denominator;
 
     return lhs;
@@ -1046,7 +1141,89 @@ inline std::ostream& operator<<(std::ostream& lhs, const BigRational& rhs) {
 #if SUPPORT_IFSTREAM == 1
 // this should behave exactly the same as reading int with respect to 
 // whitespace, consumed characters etc...
-inline std::istream& operator>>(std::istream& lhs, BigRational& rhs); // bonus
+// bonus
+inline std::istream& operator>>(std::istream& lhs, BigRational& rhs) {
+    std::string input;
+    std::getline(lhs, input);
+
+    std::string Numerator;
+    std::string Denominator;
+
+    input.erase(std::remove_if(input.begin(), input.end(), ::isspace), input.end());
+
+    if (input.empty()) {
+        lhs.setstate(std::ios::failbit);
+        return lhs;
+    }
+
+    //std::cout << "input: " << input << std::endl;
+
+    for (size_t i = 0; i < input.size(); ++i) {
+        if (input[i] == '+' || input[i] == '-') {
+            if (i != 0) { /// + hcekc 
+                if (input[i-1] == '/') {
+                    continue;
+                } else {
+                    lhs.setstate(std::ios::failbit);
+                    return lhs;
+                }
+            } else continue;
+        }
+
+        // if (input[i] == ' ') {
+        //     input.erase(i, 1);
+        //     --i;
+        //     continue;
+        // }
+
+        if (input[i] == '/') {
+            Numerator = input.substr(0, i);
+            Denominator = input.substr(i + 1);
+            break;
+        }
+
+        if (input[i] < '0' || input[i] > '9') {
+            Numerator = input.substr(0, i);
+            Denominator = "1";
+            break;
+        }
+    }
+
+    // if input "123"??? -> 123/1??? or set failbit???
+
+    // if (!Numerator.empty() && Denominator.empty()) {
+    //     Denominator = "1";
+    //     std::cout << "!!!!!!!!!!!!!!!!Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
+    // }
+
+    //std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
+
+    if (Numerator.empty() || Denominator.empty()) {
+        lhs.setstate(std::ios::failbit);
+        return lhs;
+    } 
+
+    if (Numerator.size() == 1 && (Numerator[0] == '-' || Numerator[0] == '+')) {
+        lhs.setstate(std::ios::failbit);
+        return lhs;
+    } else if (Denominator.size() == 1 && (Denominator[0] == '-' || Denominator[0] == '+')) {
+        lhs.setstate(std::ios::failbit);
+        return lhs;
+    }
+
+    if (Numerator == "-0") Numerator = "0";
+    if (Denominator == "-0") Denominator = "0";
+    
+    //std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
+
+    try {
+        rhs = BigRational(Numerator, Denominator);
+    } catch (const std::invalid_argument &e) {
+        lhs.setstate(std::ios::failbit);
+    }
+
+    return lhs;
+} 
 #endif
 
 #if SUPPORT_EVAL == 1
