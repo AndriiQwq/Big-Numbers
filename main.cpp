@@ -586,77 +586,77 @@ std::vector<TestCase> tests = {
 //     }
 // }
 
-// void test_rational_operations_recovery() {
-//     struct TestCase {
-//         std::string description;
-//         BigRational input1;
-//         BigRational input2;
-//         BigRational expected_result;
-//         char operation; // 'u' for unary minus, '+' for addition, '-' for subtraction
-//     };
+void test_rational_operations_recovery() {
+    struct TestCase {
+        std::string description;
+        BigRational input1;
+        BigRational input2;
+        BigRational expected_result;
+        char operation; // 'u' for unary minus, '+' for addition, '-' for subtraction
+    };
 
-//     std::vector<TestCase> tests = {
-//         // UnaryMinus tests
-//         {"UnaryMinus: -1/2", BigRational("-1", "2"), BigRational("0", "1"), BigRational("1", "2"), 'u'},
-//         {"UnaryMinus: 3/4", BigRational("3", "4"), BigRational("0", "1"), BigRational("-3", "4"), 'u'},
-//         {"UnaryMinus: -123456789/987654321", BigRational("-123456789", "987654321"), BigRational("0", "1"), BigRational("123456789", "987654321"), 'u'},
-//         {"UnaryMinus: 123456789/987654321", BigRational("123456789", "987654321"), BigRational("0", "1"), BigRational("-123456789", "987654321"), 'u'},
+    std::vector<TestCase> tests = {
+        // UnaryMinus tests
+        {"UnaryMinus: -1/2", BigRational("-1", "2"), BigRational("0", "1"), BigRational("1", "2"), 'u'},
+        {"UnaryMinus: 3/4", BigRational("3", "4"), BigRational("0", "1"), BigRational("-3", "4"), 'u'},
+        {"UnaryMinus: -123456789/987654321", BigRational("-123456789", "987654321"), BigRational("0", "1"), BigRational("123456789", "987654321"), 'u'},
+        {"UnaryMinus: 123456789/987654321", BigRational("123456789", "987654321"), BigRational("0", "1"), BigRational("-123456789", "987654321"), 'u'},
 
-//         // BinaryAddition tests
-//         {"BinaryAddition: 1/2 + 1/3", BigRational("1", "2"), BigRational("1", "3"), BigRational("5", "6"), '+'},
-//         {"BinaryAddition: -1/2 + 1/3", BigRational("-1", "2"), BigRational("1", "3"), BigRational("-1", "6"), '+'},
-//         {"BinaryAddition: 1/2 + -1/3", BigRational("1", "2"), BigRational("-1", "3"), BigRational("1", "6"), '+'},
-//         {"BinaryAddition: -1/2 + -1/3", BigRational("-1", "2"), BigRational("-1", "3"), BigRational("-5", "6"), '+'},
-//         {"BinaryAddition: 123456789/987654321 + 987654321/123456789", BigRational("123456789", "987654321"), BigRational("987654321", "123456789"), BigRational("990702636540161562", "121932631112635269"), '+'},
+        // BinaryAddition tests
+        {"BinaryAddition: 1/2 + 1/3", BigRational("1", "2"), BigRational("1", "3"), BigRational("5", "6"), '+'},
+        {"BinaryAddition: -1/2 + 1/3", BigRational("-1", "2"), BigRational("1", "3"), BigRational("-1", "6"), '+'},
+        {"BinaryAddition: 1/2 + -1/3", BigRational("1", "2"), BigRational("-1", "3"), BigRational("1", "6"), '+'},
+        {"BinaryAddition: -1/2 + -1/3", BigRational("-1", "2"), BigRational("-1", "3"), BigRational("-5", "6"), '+'},
+        {"BinaryAddition: 123456789/987654321 + 987654321/123456789", BigRational("123456789", "987654321"), BigRational("987654321", "123456789"), BigRational("990702636540161562", "121932631112635269"), '+'},
 
-//         // BinarySubtraction tests
-//         {"BinarySubtraction: 1/2 - 1/3", BigRational("1", "2"), BigRational("1", "3"), BigRational("1", "6"), '-'},
-//         {"BinarySubtraction: -1/2 - 1/3", BigRational("-1", "2"), BigRational("1", "3"), BigRational("-5", "6"), '-'},
-//         {"BinarySubtraction: 1/2 - -1/3", BigRational("1", "2"), BigRational("-1", "3"), BigRational("5", "6"), '-'},
-//         {"BinarySubtraction: -1/2 - -1/3", BigRational("-1", "2"), BigRational("-1", "3"), BigRational("-1", "6"), '-'},
-//         {"BinarySubtraction: 123456789/987654321 - 987654321/123456789", BigRational("123456789", "987654321"), BigRational("987654321", "123456789"), BigRational("-990702636540161562", "121932631112635269"), '-'},
+        // BinarySubtraction tests
+        {"BinarySubtraction: 1/2 - 1/3", BigRational("1", "2"), BigRational("1", "3"), BigRational("1", "6"), '-'},
+        {"BinarySubtraction: -1/2 - 1/3", BigRational("-1", "2"), BigRational("1", "3"), BigRational("-5", "6"), '-'},
+        {"BinarySubtraction: 1/2 - -1/3", BigRational("1", "2"), BigRational("-1", "3"), BigRational("5", "6"), '-'},
+        {"BinarySubtraction: -1/2 - -1/3", BigRational("-1", "2"), BigRational("-1", "3"), BigRational("-1", "6"), '-'},
+        {"BinarySubtraction: 123456789/987654321 - 987654321/123456789", BigRational("123456789", "987654321"), BigRational("987654321", "123456789"), BigRational("-990702636540161562", "121932631112635269"), '-'},
 
-//         // Tests with int64_t constructor
-//         {"BinaryAddition: 1/2 + 1/3", BigRational(1, 2), BigRational(1, 3), BigRational(5, 6), '+'},
-//         {"BinaryAddition: -1/2 + 1/3", BigRational(-1, 2), BigRational(1, 3), BigRational(-1, 6), '+'},
-//         {"BinaryAddition: 1/2 + -1/3", BigRational(1, 2), BigRational(-1, 3), BigRational(1, 6), '+'},
-//         {"BinaryAddition: -1/2 + -1/3", BigRational(-1, 2), BigRational(-1, 3), BigRational(-5, 6), '+'},
-//         {"BinaryAddition: 123456789/987654321 + 987654321/123456789", BigRational(123456789, 987654321), BigRational(987654321, 123456789), BigRational("990702636540161562", "121932631112635269"), '+'},
+        // Tests with int64_t constructor
+        {"BinaryAddition: 1/2 + 1/3", BigRational(1, 2), BigRational(1, 3), BigRational(5, 6), '+'},
+        {"BinaryAddition: -1/2 + 1/3", BigRational(-1, 2), BigRational(1, 3), BigRational(-1, 6), '+'},
+        {"BinaryAddition: 1/2 + -1/3", BigRational(1, 2), BigRational(-1, 3), BigRational(1, 6), '+'},
+        {"BinaryAddition: -1/2 + -1/3", BigRational(-1, 2), BigRational(-1, 3), BigRational(-5, 6), '+'},
+        {"BinaryAddition: 123456789/987654321 + 987654321/123456789", BigRational(123456789, 987654321), BigRational(987654321, 123456789), BigRational("990702636540161562", "121932631112635269"), '+'},
 
-//         {"BinarySubtraction: 1/2 - 1/3", BigRational(1, 2), BigRational(1, 3), BigRational(1, 6), '-'},
-//         {"BinarySubtraction: -1/2 - 1/3", BigRational(-1, 2), BigRational(1, 3), BigRational(-5, 6), '-'},
-//         {"BinarySubtraction: 1/2 - -1/3", BigRational(1, 2), BigRational(-1, 3), BigRational(5, 6), '-'},
-//         {"BinarySubtraction: -1/2 - -1/3", BigRational(-1, 2), BigRational(-1, 3), BigRational(-1, 6), '-'},
-//         {"BinarySubtraction: 123456789/987654321 - 987654321/123456789", BigRational(123456789, 987654321), BigRational(987654321, 123456789), BigRational("-990702636540161562", "121932631112635269"), '-'}
-//     };
+        {"BinarySubtraction: 1/2 - 1/3", BigRational(1, 2), BigRational(1, 3), BigRational(1, 6), '-'},
+        {"BinarySubtraction: -1/2 - 1/3", BigRational(-1, 2), BigRational(1, 3), BigRational(-5, 6), '-'},
+        {"BinarySubtraction: 1/2 - -1/3", BigRational(1, 2), BigRational(-1, 3), BigRational(5, 6), '-'},
+        {"BinarySubtraction: -1/2 - -1/3", BigRational(-1, 2), BigRational(-1, 3), BigRational(-1, 6), '-'},
+        {"BinarySubtraction: 123456789/987654321 - 987654321/123456789", BigRational(123456789, 987654321), BigRational(987654321, 123456789), BigRational("-990702636540161562", "121932631112635269"), '-'}
+    };
 
-//     for (const auto& test : tests) {
-//         try {
-//             BigRational result;
-//             switch (test.operation) {
-//                 case 'u':
-//                     result = -test.input1;
-//                     break;
-//                 case '+':
-//                     result = test.input1 + test.input2;
-//                     break;
-//                 case '-':
-//                     result = test.input1 - test.input2;
-//                     break;
-//                 default:
-//                     throw std::invalid_argument("Invalid operation");
-//             }
-//             bool pass = (result == test.expected_result);
-//             std::string status = pass ? "PASS" : "FAIL";
-//             std::cout << test.description
-//                       << " | Expected: " << test.expected_result
-//                       << " | Got: " << result
-//                       << " | " << status << "\n";
-//         } catch (const std::exception& e) {
-//             std::cout << test.description << " threw exception: " << e.what() << " | FAIL\n";
-//         }
-//     }
-// }
+    for (const auto& test : tests) {
+        try {
+            BigRational result;
+            switch (test.operation) {
+                case 'u':
+                    result = -test.input1;
+                    break;
+                case '+':
+                    result = test.input1 + test.input2;
+                    break;
+                case '-':
+                    result = test.input1 - test.input2;
+                    break;
+                default:
+                    throw std::invalid_argument("Invalid operation");
+            }
+            bool pass = (result == test.expected_result);
+            std::string status = pass ? "PASS" : "FAIL";
+            std::cout << test.description
+                      << " | Expected: " << test.expected_result
+                      << " | Got: " << result
+                      << " | " << status << "\n";
+        } catch (const std::exception& e) {
+            std::cout << test.description << " threw exception: " << e.what() << " | FAIL\n";
+        }
+    }
+}
 
 #include <limits>
 #include "Big_Numbers.hpp"
@@ -716,21 +716,21 @@ std::vector<TestCase> tests = {
 //         run_test("BigRational Inequality Check", a < b);  // 1/3 is less than 1/2
 //     }
 
-//     // Zero Denominator Check
+//     // Zero Numerator Check
 //     {
 //         try {
 //             BigRational a(1, 0);  // Should throw an exception
-//             run_test("BigRational Zero Denominator Check", false);  // Should not reach here
+//             run_test("BigRational Zero Numerator Check", false);  // Should not reach here
 //         } catch (const std::exception&) {
-//             run_test("BigRational Zero Denominator Check", true);  // Exception thrown as expected
+//             run_test("BigRational Zero Numerator Check", true);  // Exception thrown as expected
 //         }
 //     }
 
-//     // Negative Denominator Check
+//     // Negative Numerator Check
 //     {
 //         BigRational a(-1, -2);  // Represents -1/-2
 //         BigRational expected(1, 2);  // Expected result is 1/2
-//         run_test("BigRational Negative Denominator Check", a == expected);
+//         run_test("BigRational Negative Numerator Check", a == expected);
 //     }
 
 //     // Large Number Addition
@@ -823,24 +823,24 @@ std::vector<TestCase> tests = {
 //         run_test("BigRational Zero Numerator Comparison Not Equal", BigRational("0", "123456789") != BigRational("1", "123456789"));
 //     }
 
-//     // One Denominator Comparison Equal
+//     // One Numerator Comparison Equal
 //     {
-//         run_test("BigRational One Denominator Comparison Equal", BigRational("123456789", "1") == BigRational("123456789", "1"));
+//         run_test("BigRational One Numerator Comparison Equal", BigRational("123456789", "1") == BigRational("123456789", "1"));
 //     }
 
-//     // One Denominator Comparison Not Equal
+//     // One Numerator Comparison Not Equal
 //     {
-//         run_test("BigRational One Denominator Comparison Not Equal", BigRational("123456789", "1") != BigRational("987654321", "1"));
+//         run_test("BigRational One Numerator Comparison Not Equal", BigRational("123456789", "1") != BigRational("987654321", "1"));
 //     }
 
-//     // Negative Denominator Comparison Equal
+//     // Negative Numerator Comparison Equal
 //     {
-//         run_test("BigRational Negative Denominator Comparison Equal", BigRational("1", "-1") == BigRational("-1", "1"));
+//         run_test("BigRational Negative Numerator Comparison Equal", BigRational("1", "-1") == BigRational("-1", "1"));
 //     }
 
-//     // Negative Denominator Comparison Not Equal
+//     // Negative Numerator Comparison Not Equal
 //     {
-//         run_test("BigRational Negative Denominator Comparison Not Equal", BigRational("1", "-1") != BigRational("1", "1"));
+//         run_test("BigRational Negative Numerator Comparison Not Equal", BigRational("1", "-1") != BigRational("1", "1"));
 //     }
 
 //     // Complex Fraction Comparison Equal
@@ -1297,21 +1297,21 @@ void test_big_rational_operations2() {
         run_test("BigRational Inequality Check", a < b, BigRationalToString(b), BigRationalToString(a));  // 1/3 is less than 1/2
     }
 
-    // Zero Denominator Check
+    // Zero Numerator Check
     {
         try {
             BigRational a(1, 0);  // Should throw an exception
-            run_test("BigRational Zero Denominator Check", false, "", "");  // Should not reach here
+            run_test("BigRational Zero Numerator Check", false, "", "");  // Should not reach here
         } catch (const std::exception& e) {
-            run_test("BigRational Zero Denominator Check", true, "Exception thrown", e.what());  // Exception thrown as expected
+            run_test("BigRational Zero Numerator Check", true, "Exception thrown", e.what());  // Exception thrown as expected
         }
     }
 
-    // Negative Denominator Check
+    // Negative Numerator Check
     {
         BigRational a(-1, -2);  // Represents -1/-2
         BigRational expected(1, 2);  // Expected result is 1/2
-        run_test("BigRational Negative Denominator Check", a == expected, BigRationalToString(expected), BigRationalToString(a));
+        run_test("BigRational Negative Numerator Check", a == expected, BigRationalToString(expected), BigRationalToString(a));
     }
 
     // Large Number Addition
@@ -1404,24 +1404,24 @@ void test_big_rational_operations2() {
         run_test("BigRational Zero Numerator Comparison Not Equal", BigRational("0", "123456789") != BigRational("1", "123456789"), BigRationalToString(BigRational("1", "123456789")), BigRationalToString(BigRational("0", "123456789")));
     }
 
-    // One Denominator Comparison Equal
+    // One Numerator Comparison Equal
     {
-        run_test("BigRational One Denominator Comparison Equal", BigRational("123456789", "1") == BigRational("123456789", "1"), BigRationalToString(BigRational("123456789", "1")), BigRationalToString(BigRational("123456789", "1")));
+        run_test("BigRational One Numerator Comparison Equal", BigRational("123456789", "1") == BigRational("123456789", "1"), BigRationalToString(BigRational("123456789", "1")), BigRationalToString(BigRational("123456789", "1")));
     }
 
-    // One Denominator Comparison Not Equal
+    // One Numerator Comparison Not Equal
     {
-        run_test("BigRational One Denominator Comparison Not Equal", BigRational("123456789", "1") != BigRational("987654321", "1"), BigRationalToString(BigRational("987654321", "1")), BigRationalToString(BigRational("123456789", "1")));
+        run_test("BigRational One Numerator Comparison Not Equal", BigRational("123456789", "1") != BigRational("987654321", "1"), BigRationalToString(BigRational("987654321", "1")), BigRationalToString(BigRational("123456789", "1")));
     }
 
-    // Negative Denominator Comparison Equal
+    // Negative Numerator Comparison Equal
     {
-        run_test("BigRational Negative Denominator Comparison Equal", BigRational("1", "-1") == BigRational("-1", "1"), BigRationalToString(BigRational("-1", "1")), BigRationalToString(BigRational("1", "-1")));
+        run_test("BigRational Negative Numerator Comparison Equal", BigRational("1", "-1") == BigRational("-1", "1"), BigRationalToString(BigRational("-1", "1")), BigRationalToString(BigRational("1", "-1")));
     }
 
-    // Negative Denominator Comparison Not Equal
+    // Negative Numerator Comparison Not Equal
     {
-        run_test("BigRational Negative Denominator Comparison Not Equal", BigRational("1", "-1") != BigRational("1", "1"), BigRationalToString(BigRational("1", "1")), BigRationalToString(BigRational("1", "-1")));
+        run_test("BigRational Negative Numerator Comparison Not Equal", BigRational("1", "-1") != BigRational("1", "1"), BigRationalToString(BigRational("1", "1")), BigRationalToString(BigRational("1", "-1")));
     }
 
     // Complex Fraction Comparison Equal
@@ -1703,34 +1703,470 @@ void test_big_rational_arithmetics_SJJSJS() {
     }
 }
 
-int main() {
-    BigRational new1(-0, 1);
-    BigRational new2(-100, -10);
-    BigRational new3("000004234323432444564355555555555555555557", "-000003337");
+// void test_unary_minus() {
+//     // Test cases
+//     struct TestCase {
+//         std::string description;
+//         BigRational input;
+//         BigRational expected_result;
+//     };
 
-    std::cout << new1 << std::endl;
-    std::cout << new2 << std::endl;
-    std::cout << new3 << std::endl;
+//     std::vector<TestCase> tests = {
+//         {"UnaryMinus - positive", BigRational(10, 1), BigRational(-10, 1)},
+//         {"UnaryMinus - negative", BigRational(-10, 1), BigRational(10, 1)},
+//         {"UnaryMinus - zero", BigRational(0, 1), BigRational(0, 1)},
+//         {"UnaryMinus - fraction", BigRational(10, 2), BigRational(-10, 2)},
+//         {"UnaryMinus - large positive", BigRational(123456789, 1), BigRational(-123456789, 1)},
+//         {"UnaryMinus - large negative", BigRational(-123456789, 1), BigRational(123456789, 1)},
+//         {"UnaryMinus - mixed fraction positive", BigRational(123456789, 987654321), BigRational(-123456789, 987654321)},
+//         {"UnaryMinus - mixed fraction negative", BigRational(-123456789, 987654321), BigRational(123456789, 987654321)},
+//         {"UnaryMinus - small fraction positive", BigRational(1, 1000000), BigRational(-1, 1000000)},
+//         {"UnaryMinus - small fraction negative", BigRational(-1, 1000000), BigRational(1, 1000000)},
+//         {"UnaryMinus - equal Numerator and Numerator positive", BigRational(1000000, 1000000), BigRational(-1000000, 1000000)},
+//         {"UnaryMinus - equal Numerator and Numerator negative", BigRational(-1000000, 1000000), BigRational(1000000, 1000000)},
+//         {"UnaryMinus - large fraction positive", BigRational(1234567890123456789, 9876543210987654321), BigRational(-1234567890123456789, 9876543210987654321)},
+//         {"UnaryMinus - large fraction negative", BigRational(-1234567890123456789, 9876543210987654321), BigRational(1234567890123456789, 9876543210987654321)},
+//         {"UnaryMinus - small fraction positive", BigRational(1, 999999999999999999), BigRational(-1, 999999999999999999)},
+//         {"UnaryMinus - small fraction negative", BigRational(-1, 999999999999999999), BigRational(1, 999999999999999999)},
+//     };
 
-    std::cout << -new1 << std::endl;
-    std::cout << -new2 << std::endl;
-    std::cout << -new3 << std::endl;
+//     for (const auto& test : tests) {
+//         BigRational result = -test.input;
 
-    BigRational testerr(-10, 1);
-    BigRational testerr2("-1", "1");
+//         bool pass = (result == test.expected_result);
+//         std::string status = pass ? "PASS" : "FAIL";
+//         std::cout << test.description
+//                   << " | Expected: " << test.expected_result
+//                   << " | Got: " << result
+//                   << " | " << status << "\n";
+//         assert(pass);
+//     }
+// }
 
-    std::cout << testerr << ' ' << testerr2 << std::endl;
 
-    std::cout << testerr2 - testerr  << "   " <<  testerr << std::endl;
 
-    BigInteger eee("255");
-    BigInteger ee("-1");
 
-    std::cout << eee << ' ' << ee << std::endl;
 
-    std::cout << eee / ee << std::endl;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// void testBigRationalConstructors() {
+//     // Test default constructor
+//     BigRational defaultRational;
+//     std::cout << "defaultRational: " << defaultRational << ", expected: 0/1" << std::endl;
+
+//     // Test constructor with two integers
+//     BigRational intRational(2, 3);
+//     std::cout << "intRational: " << intRational << ", expected: 2/3" << std::endl;
+
+//     // Test constructor with two strings
+//     BigRational stringRational("5", "7");
+//     std::cout << "stringRational: " << stringRational << ", expected: 5/7" << std::endl;
+
+//     // Test constructor with two BigIntegers
+//     BigInteger num1("8");
+//     BigInteger den1("10");
+//     BigRational biRational(num1, den1);
+//     std::cout << "biRational: " << biRational << ", expected: 8/10" << std::endl;
+// }
+
+// // Test normalization for BigRational
+// void testBigRationalNormalization() {
+//     BigRational rational(6, 2);
+//     std::cout << "rational: " << rational << ", expected: 3/1" << std::endl;
+
+//     BigRational rational2(24, 9);
+//     std::cout << "rational2: " << rational2 << ", expected: 8/3" << std::endl;
+
+//     BigRational rational3(13, 11);
+//     std::cout << "rational3: " << rational3 << ", expected: 13/11" << std::endl;
+// }
+// Test unary operators for BigRational
+void testBigRationalUnaryOperators() {
+    BigRational rational(3, 4);
+
+    // Test unary plus operator
+    BigRational unaryPlus = +rational;
+    std::cout << "unaryPlus: " << unaryPlus << ", expected: " << rational << std::endl;
+
+    // Test unary minus operator
+    BigRational unaryMinus = -rational;
+    std::cout << "unaryMinus: " << unaryMinus << ", expected: " << BigRational(-3, 4) << std::endl;
+}
+
+// Test binary addition operator for BigRational
+void testBigRationalAdditionOperator() {
+    BigRational rational1(1, 2);
+    BigRational rational2(1, 3);
+
+    BigRational result = rational1 + rational2;
+    std::cout << "result: " << result << ", expected: " << BigRational(5, 6) << std::endl;
+}
+
+// Test binary subtraction operator for BigRational
+void testBigRationalSubtractionOperator() {
+    BigRational rational1(3, 4);
+    BigRational rational2(1, 4);
+
+    BigRational result = rational1 - rational2;
+    std::cout << "result: " << result << ", expected: " << BigRational(1, 2) << std::endl;
+}
+
+// Test binary multiplication operator for BigRational
+void testBigRationalMultiplicationOperator() {
+    BigRational rational1(2, 3);
+    BigRational rational2(3, 5);
+
+    BigRational result = rational1 * rational2;
+    std::cout << "result: " << result << ", expected: " << BigRational(2, 5) << std::endl;
+}
+
+// Test binary division operator for BigRational
+void testBigRationalDivisionOperator() {
+    BigRational rational1(3, 4);
+    BigRational rational2(1, 2);
+
+    BigRational result = rational1 / rational2;
+    std::cout << "result: " << result << ", expected: " << BigRational(3, 2) << std::endl;
+}
+
+// Test compound addition assignment operator for BigRational
+void testBigRationalAdditionAssignmentOperator() {
+    BigRational rational1(1, 3);
+    BigRational rational2(2, 3);
+
+    rational1 += rational2;
+    std::cout << "rational1: " << rational1 << ", expected: " << BigRational(1, 1) << std::endl;
+}
+
+// Test compound subtraction assignment operator for BigRational
+void testBigRationalSubtractionAssignmentOperator() {
+    BigRational rational1(3, 4);
+    BigRational rational2(1, 4);
+
+    rational1 -= rational2;
+    std::cout << "rational1: " << rational1 << ", expected: " << BigRational(1, 2) << std::endl;
+}
+
+// Test compound multiplication assignment operator for BigRational
+void testBigRationalMultiplicationAssignmentOperator() {
+    BigRational rational1(2, 3);
+    BigRational rational2(3, 5);
+
+    rational1 *= rational2;
+    std::cout << "rational1: " << rational1 << ", expected: " << BigRational(2, 5) << std::endl;
+}
+
+// Test compound division assignment operator for BigRational
+void testBigRationalDivisionAssignmentOperator() {
+    BigRational rational1(3, 4);
+    BigRational rational2(1, 2);
+
+    rational1 /= rational2;
+    std::cout << "rational1: " << rational1 << ", expected: " << BigRational(3, 2) << std::endl;
+}
+
+// Test equality operator for BigRational
+void testBigRationalEqualityOperator() {
+    BigRational rational1(1, 2);
+    BigRational rational2(2, 4);
+
+    std::cout << "rational1 == rational2: " << (rational1 == rational2) << ", expected: true" << std::endl;
+}
+
+// Test inequality operator for BigRational
+void testBigRationalInequalityOperator() {
+    BigRational rational1(1, 2);
+    BigRational rational2(3, 4);
+
+    std::cout << "rational1 != rational2: " << (rational1 != rational2) << ", expected: true" << std::endl;
+}
+
+// Test less than operator for BigRational
+void testBigRationalLessThanOperator() {
+    BigRational rational1(1, 3);
+    BigRational rational2(1, 2);
+
+    std::cout << "rational1 < rational2: " << (rational1 < rational2) << ", expected: true" << std::endl;
+}
+
+// Test greater than operator for BigRational
+void testBigRationalGreaterThanOperator() {
+    BigRational rational1(2, 3);
+    BigRational rational2(1, 2);
+
+    std::cout << "rational1 > rational2: " << (rational1 > rational2) << ", expected: true" << std::endl;
+}
+
+// Test less than or equal to operator for BigRational
+void testBigRationalLessThanOrEqualOperator() {
+    BigRational rational1(1, 2);
+    BigRational rational2(2, 4);
+
+    std::cout << "rational1 <= rational2: " << (rational1 <= rational2) << ", expected: true" << std::endl;
+}
+
+// Test greater than or equal to operator for BigRational
+void testBigRationalGreaterThanOrEqualOperator() {
+    BigRational rational1(3, 4);
+    BigRational rational2(1, 2);
+
+    std::cout << "rational1 >= rational2: " << (rational1 >= rational2) << ", expected: true" << std::endl;
+}
+
+// Test output operator for BigRational
+void testBigRationalOutputOperator() {
+    BigRational rational(1, 2);
+    std::stringstream ss;
+    ss << rational;
+    std::cout << "ss.str(): " << ss.str() << ", expected: 1/2" << std::endl;
+}
+
+// Test input operator for BigRational
+void testBigRationalInputOperator() {
+    std::stringstream ss("3/4");
+    BigRational rational;
+    ss >> rational;
+    std::cout << "rational: " << rational << ", expected: " << BigRational(3, 4) << std::endl;
+}
+
+// Test sqrt method for BigRational
+void testBigRationalSqrt() {
+    BigRational rational2(-1, 4);
+    // Attempting to calculate the square root of a negative rational should throw an exception.
+    bool exceptionThrown = false;
     try {
-        test_big_rational_arithmetics_SJJSJS();
+        rational2.sqrt();
+    } catch (const std::runtime_error& e) {
+        exceptionThrown = true;
+    }
+    std::cout << "exceptionThrown: " << exceptionThrown << ", expected: true" << std::endl;
+}
+
+void run_all_BigRational_tests() {
+    // testBigRationalConstructors();
+    // testBigRationalUnaryOperators();
+    // testBigRationalNormalization();
+
+    testBigRationalAdditionOperator();
+    testBigRationalSubtractionOperator();
+    testBigRationalMultiplicationOperator();
+    testBigRationalDivisionOperator();
+
+    testBigRationalAdditionAssignmentOperator();
+    testBigRationalSubtractionAssignmentOperator();
+    testBigRationalMultiplicationAssignmentOperator();
+    testBigRationalDivisionAssignmentOperator();
+
+    std::cout <<"control point 1" << std::endl;
+
+    testBigRationalEqualityOperator();
+    testBigRationalInequalityOperator();
+    testBigRationalLessThanOperator();
+    testBigRationalGreaterThanOperator();
+    testBigRationalLessThanOrEqualOperator();
+    testBigRationalGreaterThanOrEqualOperator();
+    std::cout <<"control point 1" << std::endl;
+
+    testBigRationalOutputOperator();
+    testBigRationalInputOperator();
+
+    //testBigRationalSqrt();
+
+    std::cout << "All BigRational tests passed!" << std::endl;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void testBigRationalIsqrt() {
+    BigRational rational1(9, 16);
+    assert(rational1.isqrt() == BigInteger(1));
+
+    BigRational rational2(5, 1);
+    // Attempting to calculate the integer square root of a non-integer rational should throw an exception.
+    bool exceptionThrown = false;
+    try {
+        rational2.isqrt();
+    } catch (const std::runtime_error& e) {
+        exceptionThrown = true;
+    }
+    assert(!exceptionThrown);
+
+    exceptionThrown = false;
+    BigRational rational3(-5, 1);
+    try {
+        rational3.isqrt();
+    } catch (const std::runtime_error& e) {
+        exceptionThrown = true;
+    }
+    assert(exceptionThrown);
+}
+
+
+
+
+
+
+
+int main() {
+    testBigRationalIsqrt();
+    // run_all_BigRational_tests();
+
+
+
+
+
+
+
+
+
+    try {
+        //test_big_rational_arithmetics_SJJSJS();
 
        // test_big_integer_arithmetics();
 
@@ -1745,16 +2181,23 @@ int main() {
         //////////////test_unarny_op_and_sub_add_op();
 
         // test_big_integer_operations2();
-        // test_big_rational_operations2();
+        //  test_big_rational_operations2();
+
+        test_unarny_op_and_sub_add_op();
+        // test_unary_minus();
+
+
+
+
 
     //     test_operations();
     //     test_rational_operations();
-    //    test_big_integer_multiplication();
+    // //    test_big_integer_multiplication();
 
-        // test_big_rational_comparisons();
-        // test_big_rational_add_subtract();
-        // test_big_rational_multiplication();
-        // test_big_rational_division();
+    //     test_big_rational_comparisons();
+    //     test_big_rational_add_subtract();
+    //     test_big_rational_multiplication();
+    //     test_big_rational_division();
         //test_big_integer_operations();
 
         //test_big_integer_sqrt();
@@ -1764,7 +2207,7 @@ int main() {
                 //test_big_integer_isqrt();
         //test_big_integer_is_prime();
 
-        // test_rational_operations_recovery();
+       // test_rational_operations_recovery();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
