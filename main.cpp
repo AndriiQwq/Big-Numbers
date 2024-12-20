@@ -6,6 +6,14 @@
 #include <cassert>
 #include <sstream>
 
+#include <stdexcept>
+#include <iostream>
+#include <sstream>
+#include <limits>
+
+// #include "header.h"
+
+
 void test_operations() {
     struct TestCase {
         std::string description;
@@ -2148,13 +2156,296 @@ void testBigRationalIsqrt() {
 }
 
 
+void testBigRationalConstructors() {
+    std::cout << "Testing BigRational constructors with additional edge cases...\n";
 
+    // Тест конструктора с большими значениями int64_t
+    try {
+        BigRational rationalLarge(INT64_MAX, INT64_MAX - 1);
+        std::cout << "rationalLarge: " << rationalLarge << ", expected: " << INT64_MAX << "/" << (INT64_MAX -1) << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalLarge: " << e.what() << "\n";
+    }
 
+    // Тест конструктора с нулевым числителем и отрицательным знаменателем
+    try {
+        BigRational rationalZeroNumNegDen(0, -5);
+        std::cout << "rationalZeroNumNegDen: " << rationalZeroNumNegDen << ", expected: 0/1\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalZeroNumNegDen: " << e.what() << "\n";
+    }
 
+    // Тест конструктора с максимальными и минимальными значениями int64_t
+    try {
+        BigRational rationalMaxMin(INT64_MIN, INT64_MAX);
+        std::cout << "rationalMaxMin: " << rationalMaxMin << ", expected: " << INT64_MIN << "/" << INT64_MAX << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalMaxMin: " << e.what() << "\n";
+    }
 
+    // Тест конструктора с отрицательным нулевым числителем
+    try {
+        BigRational rationalNegZero(-0, 3);
+        std::cout << "rationalNegZero: " << rationalNegZero << ", expected: 0/1\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalNegZero: " << e.what() << "\n";
+    }
+
+    // Тест конструктора с недопустимой строкой числителя
+    try {
+        BigRational rationalInvalidNum("abc", "5");
+        std::cout << "rationalInvalidNum: " << rationalInvalidNum << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalInvalidNum: " << e.what() << "\n";
+    }
+
+    // Тест конструктора с недопустимой строкой знаменателя
+    try {
+        BigRational rationalInvalidDen("5", "xyz");
+        std::cout << "rationalInvalidDen: " << rationalInvalidDen << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalInvalidDen: " << e.what() << "\n";
+    }
+
+    // Тест конструктора с десятичными строками (некорректные входные данные)
+    try {
+        BigRational rationalDecimal("3.5", "2.1");
+        std::cout << "rationalDecimal: " << rationalDecimal << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalDecimal: " << e.what() << "\n";
+    }
+
+    // Тест конструктора со строками с ведущими нулями
+    try {
+        BigRational rationalLeadingZeros("0005", "00010");
+        std::cout << "rationalLeadingZeros: " << rationalLeadingZeros << ", expected: 1/2\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalLeadingZeros: " << e.what() << "\n";
+    }
+
+    // Тест конструктора с очень большими числами в виде строк
+    try {
+        std::string largeNum = "123456789012345678901234567890";
+        std::string largeDen = "987654321098765432109876543210";
+        BigRational rationalVeryLarge(largeNum, largeDen);
+        std::cout << "rationalVeryLarge: " << rationalVeryLarge << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalVeryLarge: " << e.what() << "\n";
+    }
+
+    // Тест конструктора с отрицательным числителем и знаменателем
+    try {
+        BigRational rationalNegNumDen(-7, -8);
+        std::cout << "rationalNegNumDen: " << rationalNegNumDen << ", expected: 7/8\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalNegNumDen: " << e.what() << "\n";
+    }
+
+    // Тест конструктора с обоими нулевыми числителем и знаменателем
+    try {
+        BigRational rationalZeroNumZeroDen(0, 0);
+        std::cout << "rationalZeroNumZeroDen: " << rationalZeroNumZeroDen << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalZeroNumZeroDen: " << e.what() << "\n";
+    }
+
+    // Тест конструктора с пробелами в строках
+    try {
+        BigRational rationalSpaces(" 15 ", " 3 ");
+        std::cout << "rationalSpaces: " << rationalSpaces << ", expected: 5/1\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalSpaces: " << e.what() << "\n";
+    }
+
+    // Тест конструктора с пустыми строками
+    try {
+        BigRational rationalEmpty("", "");
+        std::cout << "rationalEmpty: " << rationalEmpty << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Exception in rationalEmpty: " << e.what() << "\n";
+    }
+
+    std::cout << "Additional BigRational constructor tests completed.\n";
+}
+
+// Test the constructor with an int
+void testIntConstructor() {
+    // Тестирование конструктора с максимальным значением int64_t
+    BigInteger num3(std::numeric_limits<int64_t>::max());
+    BigInteger expectedNum3(std::to_string(std::numeric_limits<int64_t>::max()));
+    assert(num3 == BigInteger(expectedNum3) && "Int constructor failed for int64_t max");
+
+    // // Тестирование конструктора с минимальным значением int64_t
+    // BigInteger num4(std::numeric_limits<int64_t>::min());
+    // BigInteger expectedNum4("-9223372036854775808");
+    // assert(num4 == expectedNum4 && "Int constructor failed for int64_t min");
+}
+// Test the constructor with a string
+void testStringConstructor() {
+    BigInteger num1("789");
+    BigInteger expectedNum1(789);
+    assert(num1 == expectedNum1 && "String constructor failed for positive number");
+    std::cout << "num1: " << num1 << std::endl;
+
+    BigInteger num2("-987");
+    BigInteger expectedNum2(-987);
+    assert(num2 == expectedNum2 && "String constructor failed for negative number");
+    std::cout << "num2: " << num2<< std::endl;
+
+    bool exceptionThrown = false;
+
+    // Тест с ведущими и хвостовыми пробелами
+    try {
+        BigInteger num3("  123  ");
+    } catch (const std::exception&) {
+        exceptionThrown = true;
+    }
+    assert(exceptionThrown && "String constructor should throw exception for string with spaces");
+    std::cout << "num3: exception thrown" << std::endl;
+
+    // Тест с нецифровыми символами
+    exceptionThrown = false;
+    try {
+        BigInteger num4("abc");
+    } catch (const std::exception&) {
+        exceptionThrown = true;
+    }
+    assert(exceptionThrown && "String constructor should throw exception for non-digit string");
+    std::cout << "num4: exception thrown" << std::endl;
+
+    // Тест с очень большим числом, превышающим пределы int64_t
+    exceptionThrown = false;
+    try {
+        BigInteger num5("1234567890123456789012345678901234567890");
+        std::cout << "num5: " << num5 << std::endl;
+    } catch (const std::exception&) {
+        exceptionThrown = true;
+    }
+    assert(!exceptionThrown && "String constructor should handle very large numbers");
+    
+
+    // Тест с недопустимыми символами в строке
+    exceptionThrown = false;
+    try {
+        BigInteger num6("1234567890X1234567890");
+    } catch (const std::exception&) {
+        exceptionThrown = true;
+    }
+    assert(exceptionThrown && "String constructor should handle non-digit characters");
+    std::cout << "num6: exception thrown" << std::endl;
+}
+// Test constructor and assignment operator error handling
+void testErrorHandling() {
+    // Тест конструктора с некорректной строкой
+    try {
+        BigInteger num("invalid123");
+        assert(false && "Constructor should have thrown an exception for invalid input");
+    } catch (const std::exception&) {
+        // Ожидается выброс исключения
+        std::cout << "num: exception thrown for invalid123" << std::endl;
+        assert(true);
+    }
+
+    // Тест оператора присваивания с некорректной строкой
+    BigInteger num;
+    try {
+        num = BigInteger("invalid456");
+        assert(false && "Assignment operator should have thrown an exception for invalid input");
+    } catch (const std::exception&) {
+        // Ожидается выброс исключения
+        std::cout << "num: exception thrown for invalid456" << std::endl;
+        assert(true);
+    }
+}
+
+void testBigIntegerInputOperator() {
+    std::istringstream iss;
+
+    BigInteger num1;
+    iss.str("12345");
+    iss.clear(); // Очистка состояния потока
+    iss >> num1;
+    assert(num1 == BigInteger(12345));
+    std::cout << "num1: " << num1 << std::endl;
+
+    BigInteger num2;
+    iss.str("-98765");
+    iss.clear(); // Очистка состояния потока
+    iss >> num2;
+    assert(num2 == BigInteger(-98765));
+    std::cout << "num2: " << num2 << std::endl;
+
+    BigInteger num3;
+    iss.str("  123456789012345678901234567890  ");
+    iss.clear(); // Очистка состояния потока
+    iss >> num3;
+    assert(num3 == BigInteger("123456789012345678901234567890"));
+    std::cout << "num3: " << num3 << std::endl;
+
+    // Test invalid input
+    BigInteger num4;
+    iss.str("abc");
+    iss.clear(); // Очистка состояния потока
+    iss >> num4;
+    assert(iss.fail() && "Input should fail for non-digit characters");
+    std::cout << "num4: invalid input test passed" << std::endl;
+
+    // Test input with only a negative sign
+    BigInteger num5;
+    iss.str("-");
+    iss.clear(); // Очистка состояния потока
+    iss >> num5;
+    assert(iss.fail() && "Input should fail for only a negative sign");
+    std::cout << "num5: invalid input test passed" << std::endl;
+
+    BigInteger anum;
+    iss.str("-0");
+    iss.clear(); // Очистка состояния потока
+    iss >> anum;
+    assert(anum == BigInteger(0));
+    std::cout << "anum: " << anum << std::endl;
+}
+
+void testEval() {
+    std::string json_str = R"({
+        "op":"+",
+        "left": -123,
+        "right": {
+            "op":"*",
+            "left": "12345678901234567890",
+            "right": {
+                "op":"%",
+                "left":"34",
+                "right":1
+            }
+        }
+    })";
+
+    BigInteger result = eval(json_str);
+    std::cout << "Result: " << result << std::endl;
+}
 
 int main() {
-    testBigRationalIsqrt();
+        testEval();
+    // testIntConstructor();
+
+    // BigInteger cvc("-1");
+    // BigInteger wded("1");
+
+    // std::cout << " 1/-1: " << wded / cvc << std::endl;
+
+    // testIntConstructor();
+    // testStringConstructor();
+    // testErrorHandling();
+    // testBigIntegerInputOperator();
+
+    std::cout << "|||||||||||||||||||||||||||||||||||||||||||||||||||||||||!\n";
+
+
+    // testBigIntegerInputOperator();
+        // testBigRationalConstructors();
+
+    // testBigRationalIsqrt();
     // run_all_BigRational_tests();
 
 
@@ -2183,7 +2474,7 @@ int main() {
         // test_big_integer_operations2();
         //  test_big_rational_operations2();
 
-        test_unarny_op_and_sub_add_op();
+        // test_unarny_op_and_sub_add_op();
         // test_unary_minus();
 
 
@@ -2214,43 +2505,43 @@ int main() {
         return 1;
     }
 
-    //test         {"Test 2: -1/2 + 1/3", BigRational(-1, 2), BigRational(1, 3), BigRational(-1, 6), 'a'},
+    // //test         {"Test 2: -1/2 + 1/3", BigRational(-1, 2), BigRational(1, 3), BigRational(-1, 6), 'a'},
 
-    BigRational a("-1", "2");
-    BigRational b("1", "3");
-    std::cout << "a + b: " << a + b << std::endl;
+    // BigRational a("-1", "2");
+    // BigRational b("1", "3");
+    // std::cout << "a + b: " << a + b << std::endl;
 
-    // // Test += 3 cases
-    // BigInteger a("-123456789");
-    // BigInteger b("-987654321");
-    // std::cout << "a += b: " << (a -= b) << std::endl;
-    // BigInteger q("987654321");
-    // BigInteger w("-123456789");
-    // std::cout << "q += w: " << (q += w) << std::endl;
-
-
-    BigRational c("-5", "3");
-    BigRational d(-2, 7);
-    BigRational e("-1", "21");
-
-    BigRational g("-2", "3");
-    BigRational h(-2, 3);
-    std::cout << "c * d: " << g * h  << std::endl;
-
-    //Write test fore BN nnad operator - 
-    BigRational i("-1", "2");
-    BigRational j(1, 3);
-    std::cout << "i - j: " << i + j  << std::endl;
-        std::cout << "i - j: " << -i - (-j)  << std::endl;
+    // // // Test += 3 cases
+    // // BigInteger a("-123456789");
+    // // BigInteger b("-987654321");
+    // // std::cout << "a += b: " << (a -= b) << std::endl;
+    // // BigInteger q("987654321");
+    // // BigInteger w("-123456789");
+    // // std::cout << "q += w: " << (q += w) << std::endl;
 
 
-    BigRational k("-2", "3");
-    BigRational l(-2, 3);
-    std::cout << "k / l: " << k - l  << std::endl;
+    // BigRational c("-5", "3");
+    // BigRational d(-2, 7);
+    // BigRational e("-1", "21");
 
-    BigRational m("-2", "3");
-    BigRational n(-2, 3);
-    std::cout << "m % n: " << m - n  << std::endl;
+    // BigRational g("-2", "3");
+    // BigRational h(-2, 3);
+    // std::cout << "c * d: " << g * h  << std::endl;
+
+    // //Write test fore BN nnad operator - 
+    // BigRational i("-1", "2");
+    // BigRational j(1, 3);
+    // std::cout << "i - j: " << i + j  << std::endl;
+    //     std::cout << "i - j: " << -i - (-j)  << std::endl;
+
+
+    // BigRational k("-2", "3");
+    // BigRational l(-2, 3);
+    // std::cout << "k / l: " << k - l  << std::endl;
+
+    // BigRational m("-2", "3");
+    // BigRational n(-2, 3);
+    // std::cout << "m % n: " << m - n  << std::endl;
 
 
 }
