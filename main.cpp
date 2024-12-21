@@ -2408,15 +2408,17 @@ void testBigIntegerInputOperator() {
 
 void testEval() {
     std::string json_str = R"({
-        "op":"+",
-        "left": -123,
-        "right": {
-            "op":"*",
-            "left": "12345678901234567890",
+        {
+            "op":"-",
+            "left": -123,
             "right": {
-                "op":"%",
-                "left":"34",
-                "right":1
+                "op":"*",
+                "left": "-12345678901234567890",
+                "right": {
+                    "op":"/",
+                    "left":"-34",
+                    "right":-1
+                }
             }
         }
     })";
@@ -2425,8 +2427,97 @@ void testEval() {
     std::cout << "Result: " << result << std::endl;
 }
 
+void testFromInt64Min() {
+    try {
+        BigInteger num(INT64_MIN);
+        std::string expected = "-9223372036854775808";
+        std::cout << "FromInt64Min: Expected: " << expected << ", Got: " << num << std::endl;
+    } catch (const std::exception& e) {
+        std::cout << "FromInt64Min: Failed - " << e.what() << std::endl;
+    }
+}
+
+void testFromStringInvalid() {
+    try {
+        BigInteger num("");
+        std::cout << "FromStringInvalid (empty string): Failed" << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "FromStringInvalid (empty string): Passed - " << e.what() << std::endl;
+    }
+
+    try {
+        BigInteger num("-");
+        std::cout << "FromStringInvalid (single '-'): Failed" << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "FromStringInvalid (single '-'): Passed - " << e.what() << std::endl;
+    }
+
+    try {
+        BigInteger num("abc");
+        std::cout << "FromStringInvalid (non-numeric): Failed" << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "FromStringInvalid (non-numeric): Passed - " << e.what() << std::endl;
+    }
+
+    try {
+        BigInteger num("12-34");
+        std::cout << "FromStringInvalid (random '-'): Failed" << num <<std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "FromStringInvalid (random '-'): Passed - " << e.what() << std::endl;
+    }
+
+    try {
+        BigInteger num("12.34");
+        std::cout << "FromStringInvalid (decimal point): Failed" << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "FromStringInvalid (decimal point): Passed - " << e.what() << std::endl;
+    }
+
+    try {
+        BigInteger num("12+34");
+        std::cout << "FromStringInvalid (random '+'): Failed" << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "FromStringInvalid (random '+'): Passed - " << e.what() << std::endl;
+    }
+
+    try {
+        BigInteger num("12*34");
+        std::cout << "FromStringInvalid (random '*'): Failed" << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "FromStringInvalid (random '*'): Passed - " << e.what() << std::endl;
+    }
+
+    try {
+        BigInteger num("12/34");
+        std::cout << "FromStringInvalid (random '/'): Failed" << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "FromStringInvalid (random '/'): Passed - " << e.what() << std::endl;
+    }
+}
+
+void testFromStringValid() {
+    try {
+        BigInteger num("1234567890");
+        std::string expected = "1234567890";
+        std::cout << "FromStringValid (positive): Expected: " << expected << ", Got: " << num << std::endl;
+    } catch (const std::exception& e) {
+        std::cout << "FromStringValid (positive): Failed - " << e.what() << std::endl;
+    }
+
+    try {
+        BigInteger num("-9876543210");
+        std::string expected = "-9876543210";
+        std::cout << "FromStringValid (negative): Expected: " << expected << ", Got: " << num << std::endl;
+    } catch (const std::exception& e) {
+        std::cout << "FromStringValid (negative): Failed - " << e.what() << std::endl;
+    }
+}
+
 int main() {
-        testEval();
+    testFromInt64Min();
+    testFromStringInvalid();
+    testFromStringValid();
+        // testEval();
     // testIntConstructor();
 
     // BigInteger cvc("-1");

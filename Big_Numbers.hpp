@@ -66,7 +66,7 @@ public:
     BigInteger(int64_t num){
         if (num == INT64_MIN) {
             std::string min_val = "-9223372036854775808";
-            BigInteger min(min_val);
+            *this = BigInteger(min_val);
             return;
         }
 
@@ -114,8 +114,8 @@ public:
 
         // Save the number in string to the vector
         for (int i = str.size() - 1; i >= 0; i--) {
-            // skip thw first sign
-            if (str[i] == '-' || str[i] == '+')
+            // skip thw first sign, check if the + or - in the begin of the string
+            if ((str[i] == '-' || str[i] == '+') && i == 0)
                 continue;
             if (!std::isdigit(str[i]))
                 throw std::invalid_argument("Invalid string, it's not a number or incorrect formated number");
@@ -1262,6 +1262,8 @@ inline BigInteger eval(const std::string& const_input) {
     // std::cout << "input: " << const_input << std::endl;
 
     std::string input = const_input;
+    input.erase(std::remove(input.begin(), input.end(), ' '), input.end());
+
     BigInteger result = 0;
 
     std::string temp_sign;
@@ -1272,12 +1274,55 @@ inline BigInteger eval(const std::string& const_input) {
     int it = 0; 
     bool get_chenge = false;
     bool stop_condition = false;
+    bool waite_end_or_begin_of_breckets = false;
+
+    // bool is_negative = false;
     while (!stop_condition) {
-        
+
         for(char ch : input){
             bool add_to_num = false;
             it++;
             if (ch == ' ') continue;
+
+            if (waite_end_or_begin_of_breckets) {
+                if (ch == '{') {
+                    waite_end_or_begin_of_breckets = false;
+                    continue;
+                } else if (ch == '}'){
+                    bool skip = false;
+                    for(char ch : temp_substring){
+                        // find first ',' and skip it
+                        if (ch == ',') {
+                            skip = true;
+                            continue;
+                        }
+
+                        if (skip) {
+                            if (ch == ' ') continue;
+                            if ( ch == '-') temp_num += ch;
+                            if (ch >= '0' && ch <= '9') temp_num += ch;
+                            if ( ch == '.') break;
+                            if ( ch == ',') break;
+                        }
+                    }
+
+                    temp_result += temp_num;
+                    stop_condition = true;
+                    break;
+                }else {
+                    continue;
+                }
+            }
+
+            // control the sign of the number 
+            if (ch == '+' || ch == '-') {
+                //check if ch+1 is a number
+                if (input[it+1] >= '0' && input[it+1] <= '9') {
+                    // is_negative = true;
+                    continue;
+                }
+            }
+
             if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
                 temp_sign = ch;
                 add_to_num = true;
@@ -1293,6 +1338,8 @@ inline BigInteger eval(const std::string& const_input) {
                 //get left num 
                 for(char ch : temp_substring){
                     if (ch == ' ') continue;
+                    // check num sign, is it negative
+                    if ( ch == '-') temp_num += ch;
                     // check num sign 
                     if (ch >= '0' && ch <= '9') temp_num += ch;
                     if ( ch == '.') break;
@@ -1301,6 +1348,11 @@ inline BigInteger eval(const std::string& const_input) {
                 }
                 temp_result += temp_num;
                 temp_num.clear();
+
+                // if (is_negative){
+                //     temp_result = "-" + temp_result;
+                //     is_negative = false;
+                // } 
                 temp_result += temp_sign;
                 // std::cout << "temp_result: " << temp_result << std::endl;
 
@@ -1310,38 +1362,12 @@ inline BigInteger eval(const std::string& const_input) {
             if (get_chenge) {
                 input = temp_substring;
                 get_chenge = false;
+                waite_end_or_begin_of_breckets = true;
             }
-
-            if (ch == '}'){
-                // std::cout << "temp_result: " << temp_result << std::endl;
-                // std::cout << "temp_substring: " << temp_substring << std::endl;
-
-                //get right num, find first ',' and skip it
-                bool skip = false;
-                for(char ch : temp_substring){
-                    // find first ',' and skip it
-                    if (ch == ',') {
-                        skip = true;
-                        continue;
-                    }
-
-                    if (skip) {
-                        if (ch == ' ') continue;
-                        if (ch >= '0' && ch <= '9') temp_num += ch;
-                        if ( ch == '.') break;
-                        if ( ch == ',') break;
-                    }
-                }
-
-                temp_result += temp_num;
-                stop_condition = true;
-                break;
-            } 
-
         }
     }
 
-    // std::cout << "temp_result: " << temp_result << std::endl;
+    //  std::cout << "temp_result: " << temp_result << std::endl;
 
     //process the result 
     // "123+12345678901234567890*34%1" -> 123
@@ -1371,20 +1397,66 @@ inline BigInteger eval(const std::string& const_input) {
                 for (auto it = left.rbegin(); it != left.rend(); ++it) {
                     char ch = *it;
                     if (ch >= '0' && ch <= '9') left_num = ch + left_num;
-                    if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
+                    else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
                         left.erase(left.size() - left_num.size(), left_num.size());
                         break;
                     }
+                    // else if (ch == '-') { 
+                    //     // This is begin of the string 
+                    //     // if (it.base() == left.begin()) {
+                    //     //     left_num = ch + left_num;
+                    //     //     left.erase(left.size() - left_num.size(), left_num.size());
+                    //     //     break;
+                    //     // }
+                    //     // Check if there is no other operator after '-'
+                    //     // auto next_it = it + 1;
+                    //     // if (next_it != left.rend() && *next_it != '+' && *next_it != '-' && *next_it != '*' && *next_it != '/' && *next_it != '%') {
+                    //     //     // left_num = ch + left_num;
+                    //     //     left.erase(left.size() - left_num.size(), left_num.size());
+                    //     //     break;
+                    //     // } else {
+                    //     //     left_num = ch + left_num;
+                    //     //     left.erase(left.size() - left_num.size(), left_num.size());
+                    //     // }
+                    // }
                 }
 
-                //get right num, and delete it from the string
-                for (char ch : right) {
-                    if (ch >= '0' && ch <= '9') right_num += ch;
-                    if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
-                        right.erase(0, right_num.size());
-                        break;
+                if (!left.empty() && left.size() > 1) {
+                    if (left.back() == '-' && !(left[left.size() - 2] != '+' && left[left.size() - 2] != '-' && left[left.size() - 2] != '*' && left[left.size() - 2] != '/' && left[left.size() - 2] != '%')) {
+                        left.erase(left.size() - 1, 1);
+                        left_num = "-" + left_num;
                     }
                 }
+
+                // std::cout << "leftnum: " << left_num << std::endl;
+                // std::cout << "left: " << left << std::endl;
+
+                //get right num, and delete it from the string
+                //First check if first char is a '-' sign
+                if (!right.empty() && right[0] == '-') {
+                    if (right.size() > 1 && (right[1] >= '0' && right[1] <= '9')) {
+                        right_num = "-";
+                        right.erase(0, 1);
+                    }
+
+                    for (char ch : right) {
+                        if (ch >= '0' && ch <= '9') right_num += ch;
+                        if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
+                            right.erase(0, right_num.size() - 1);
+                            break;
+                        }
+                    }
+                } else{
+                    for (char ch : right) {
+                        if (ch >= '0' && ch <= '9') right_num += ch;
+                        if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
+                            right.erase(0, right_num.size());
+                            break;
+                        }
+                    }
+                }
+
+
 
                 // std::cout << "left: " << left << std::endl;
                 // std::cout << "right: " << right << std::endl;
@@ -1407,9 +1479,18 @@ inline BigInteger eval(const std::string& const_input) {
                 bool left_has_sign = false;
                 for(auto it = left.rbegin(); it != left.rend(); ++it) {
                     char ch = *it;
-                    if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
+                    if (ch == '+' || ch == '*' || ch == '/' || ch == '%') {
                         left_has_sign = true;
                         break;
+                    }
+                    if (ch == '-') {
+                        //check if it end of the string
+                        if (it.base() == right.begin()) {
+                            break;
+                        } else {
+                            left_has_sign = true;
+                            break;
+                        }
                     }
                 }
 
@@ -1433,6 +1514,7 @@ inline BigInteger eval(const std::string& const_input) {
                     temp_result = result.to_string() + right;
                 } else if (!left_has_sign && !right_has_sign) {
                     stop_condition = true;
+                    break;
                 }            
                 
                 // std::cout << "!!!!!!!!!!temp_result: " << temp_result << std::endl;
@@ -1447,35 +1529,96 @@ inline BigInteger eval(const std::string& const_input) {
         }
         if (skip_add_sub) continue;
 
-        for(char ch : temp_result){
+        for (size_t d = 0; d < temp_result.size(); d++) {
+            char ch = temp_result[d];
             std::string left_num = "", right_num = "";
 
-            if (ch == ' ') continue;
+            if (ch == ' ') 
+                continue;
+            
+            // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
+            // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
+            // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
+            // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
+            // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
+            // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
 
-                        if (ch == '+' || ch == '-') {
+
+
+            if (ch == '-'){
+                // // if next ch + 1 is a number
+                // if (i + 1 < temp_result.size() && (temp_result[i + 1] >= '0' && temp_result[i + 1] <= '9')) {
+                //     std::cout << "fdfdf" << std::endl;
+                //     continue;
+                // }
+                
+                // if isthe begin of the string
+                // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
+                if (d == 0) { 
+                    // std::cout << "begin of the string" << std::endl;
+                    continue;
+                }
+            }
+
+            if (ch == '+' || ch == '-') {
                 //get left num
-                left = temp_result.substr(0, temp_result.find(ch));
-                right = temp_result.substr(temp_result.find(ch) + 1, temp_result.size());
+                left = temp_result.substr(0, d);
+                right = temp_result.substr(d + 1);
                 // std::cout << "right: " << right << std::endl;
+
+
+                // std::cout << "1righ:"<< right << std::endl;
+                // std::cout << "1lest: " << left << std::endl;
+                // std::cout << "1left_num: " << left_num << std::endl;
+                // std::cout << "1right_num: " << right_num << std::endl;
 
                 //get left num, and delete it from the string
                 for (auto it = left.rbegin(); it != left.rend(); ++it) {
                     char ch = *it;
                     if (ch >= '0' && ch <= '9') left_num = ch + left_num;
-                    if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
+                    else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
                         left.erase(left.size() - left_num.size(), left_num.size());
                         break;
                     }
                 }
 
-                //get right num, and delete it from the string
-                for (char ch : right) {
-                    if (ch >= '0' && ch <= '9') right_num += ch;
-                    if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
-                        right.erase(0, right_num.size());
-                        break;
+                if (!left.empty() && left.back() == '-') {
+                    left.erase(left.size() - 1, 1);
+                    left_num = "-" + left_num;
+                }
+
+                // std::cout << "2righ:"<< right << std::endl;
+                // std::cout << "2lest: " << left << std::endl;
+                // std::cout << "2left_num: " << left_num << std::endl;
+                // std::cout << "2right_num: " << right_num << std::endl;
+
+                if (!right.empty() && right[0] == '-') {
+                    if (right.size() > 1 && (right[1] >= '0' && right[1] <= '9')) {
+                        right_num = "-";
+                        right.erase(0, 1);
+                    }
+
+                    for (char ch : right) {
+                        if (ch >= '0' && ch <= '9') right_num += ch;
+                        if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
+                            right.erase(0, right_num.size() - 1);
+                            break;
+                        }
+                    }
+                } else{
+                    for (char ch : right) {
+                        if (ch >= '0' && ch <= '9') right_num += ch;
+                        if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
+                            right.erase(0, right_num.size());
+                            break;
+                        }
                     }
                 }
+
+                // std::cout << "3Debug: left: " << left << std::endl;
+                // std::cout << "3Debug: right: " << right << std::endl;
+                // std::cout << "3Debug: left_num: " << left_num << std::endl;
+                // std::cout << "3Debug: right_num: " << right_num << std::endl;
 
                 //process the result
                 if (ch == '+') {
@@ -1490,9 +1633,18 @@ inline BigInteger eval(const std::string& const_input) {
                 bool left_has_sign = false;
                 for(auto it = left.rbegin(); it != left.rend(); ++it) {
                     char ch = *it;
-                    if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
+                    if (ch == '+' || ch == '*' || ch == '/' || ch == '%') {
                         left_has_sign = true;
                         break;
+                    }
+                    if (ch == '-') {
+                        //check if it end of the string
+                        if (it.base() == right.begin()) {
+                            break;
+                        } else {
+                            left_has_sign = true;
+                            break;
+                        }
                     }
                 }
 
@@ -1504,6 +1656,10 @@ inline BigInteger eval(const std::string& const_input) {
                     }
                 }
 
+                // std::cout << "DEBUG INFO" << std::endl;
+                // std::cout << "left_has_sign: " << left_has_sign << std::endl;
+                // std::cout << "right_has_sign: " << right_has_sign << std::endl;
+
                 if (left_has_sign && right_has_sign) {
                     temp_result = left + result.to_string() + right;
                 } else if (left_has_sign && !right_has_sign) {
@@ -1512,8 +1668,9 @@ inline BigInteger eval(const std::string& const_input) {
                     temp_result = result.to_string() + right;
                 } else if (!left_has_sign && !right_has_sign) {
                     stop_condition = true;
+                    break;
                 }            
-                
+                // std::cout << "!!!!!!!!!!temp_result222222222222: " << temp_result << std::endl;
             }
         }
     } 
