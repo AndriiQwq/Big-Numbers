@@ -2513,7 +2513,482 @@ void testFromStringValid() {
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+bool areAlmostEqual(double a, double b, double epsilon = 1e-9) {
+    return std::abs(a - b) < epsilon;
+}
+
+
+
+
+#include <iostream>
+#include <string>
+#include <stdexcept>
+#include "Big_Numbers.hpp"
+
+// Функция для сравнения двух BigInteger объектов
+bool areEqual(const BigInteger& a, const BigInteger& b) {
+    return a == b;
+}
+
+// ------------------- Тесты для BigRational::isqrt() -------------------
+
+// Тест 1: Проверка isqrt для 0/1
+void testRationalIsqrtZero() {
+    try {
+        BigRational num("0", "1");
+        BigInteger result = num.isqrt();
+        BigInteger expected("0");
+        if (areEqual(result, expected)) {
+            std::cout << "testRationalIsqrtZero: Passed" << std::endl;
+        } else {
+            std::cout << "testRationalIsqrtZero: Failed - Expected: " << expected << ", Got: " << result << std::endl;
+        }
+    } catch (const std::exception& e) {
+        std::cout << "testRationalIsqrtZero: Failed - " << e.what() << std::endl;
+    }
+}
+
+// Тест 2: Проверка isqrt для 1/1
+void testRationalIsqrtOne() {
+    try {
+        BigRational num("1", "1");
+        BigInteger result = num.isqrt();
+        BigInteger expected("1");
+        if (areEqual(result, expected)) {
+            std::cout << "testRationalIsqrtOne: Passed" << std::endl;
+        } else {
+            std::cout << "testRationalIsqrtOne: Failed - Expected: " << expected << ", Got: " << result << std::endl;
+        }
+    } catch (const std::exception& e) {
+        std::cout << "testRationalIsqrtOne: Failed - " << e.what() << std::endl;
+    }
+}
+
+// Тест 3: Проверка isqrt для совершенных квадратов дробей
+void testRationalIsqrtPerfectSquares() {
+    struct TestCase {
+        std::string numerator;
+        std::string denominator;
+        std::string expected;
+    };
+
+    TestCase testCases[] = {
+        {"4", "1", "2"},
+        {"9", "1", "3"},
+        {"16", "1", "4"},
+        {"25", "1", "5"},
+        {"1", "4", "0"},
+        {"9", "4", "1"},   // sqrt(9/4) = 1 (floor(1.5))
+        {"100", "25", "2"}, // sqrt(100/25) = 2
+        {"225", "25", "3"},
+        {"10000", "100", "10"},
+        {"49", "9", "2"},   // sqrt(49/9) = 2.333... -> floor(2.333...) = 2
+    };
+
+    for (const auto& test : testCases) {
+        try {
+            BigRational num(test.numerator, test.denominator);
+            BigInteger result = num.isqrt();
+            BigInteger expected(test.expected);
+            if (areEqual(result, expected)) {
+                std::cout << "testRationalIsqrtPerfectSquares (" << test.numerator << "/" << test.denominator << "): Passed" << std::endl;
+            } else {
+                std::cout << "testRationalIsqrtPerfectSquares (" << test.numerator << "/" << test.denominator << "): Failed - Expected: " 
+                          << expected << ", Got: " << result << std::endl;
+            }
+        } catch (const std::exception& e) {
+            std::cout << "testRationalIsqrtPerfectSquares (" << test.numerator << "/" << test.denominator << "): Failed - " << e.what() << std::endl;
+        }
+    }
+}
+
+// Тест 4: Проверка isqrt для несовершенных квадратов дробей
+void testRationalIsqrtNonPerfectSquares() {
+    struct TestCase {
+        std::string numerator;
+        std::string denominator;
+        std::string expected;
+    };
+
+    TestCase testCases[] = {
+        {"2", "3", "0"},   // floor(sqrt(2/3)) ≈ 0.816 -> 0
+        {"3", "2", "1"},   // floor(sqrt(1.5)) ≈ 1.224 -> 1
+        {"5", "2", "1"},   // floor(sqrt(2.5)) ≈ 1.581 -> 1
+        {"10", "4", "1"},  // floor(sqrt(2.5)) ≈ 1.581 -> 1
+        {"7", "4", "1"},   // floor(sqrt(1.75)) ≈ 1.322 -> 1
+        {"8", "9", "0"},   // floor(sqrt(0.888...)) ≈ 0.942 ->0
+        {"50", "9", "2"},  // floor(sqrt(5.555...)) ≈ 2.357 ->2
+        {"99", "25", "1"}, // floor(sqrt(3.96)) ≈1.989 ->1
+    };
+
+    for (const auto& test : testCases) {
+        try {
+            BigRational num(test.numerator, test.denominator);
+            BigInteger result = num.isqrt();
+            BigInteger expected(test.expected);
+            if (areEqual(result, expected)) {
+                std::cout << "testRationalIsqrtNonPerfectSquares (" << test.numerator << "/" << test.denominator << "): Passed" << std::endl;
+            } else {
+                std::cout << "testRationalIsqrtNonPerfectSquares (" << test.numerator << "/" << test.denominator << "): Failed - Expected: " 
+                          << expected << ", Got: " << result << std::endl;
+            }
+        } catch (const std::exception& e) {
+            std::cout << "testRationalIsqrtNonPerfectSquares (" << test.numerator << "/" << test.denominator << "): Failed - " << e.what() << std::endl;
+        }
+    }
+}
+
+// Тест 5: Проверка isqrt для отрицательных дробей (должны выбрасывать исключение)
+void testRationalIsqrtNegativeNumbers() {
+    struct TestCase {
+        std::string numerator;
+        std::string denominator;
+    };
+
+    TestCase testCases[] = {
+        {"-1", "1"},
+        {"-4", "1"},
+        {"-9", "4"},
+        {"-16", "25"},
+        {"-100", "9"}
+    };
+
+    for (const auto& test : testCases) {
+        try {
+            BigRational num(test.numerator, test.denominator);
+            BigInteger result = num.isqrt();
+            std::cout << "testRationalIsqrtNegativeNumbers (" << test.numerator << "/" << test.denominator << "): Failed - Expected exception, Got: " 
+                      << result << std::endl;
+        } catch (const std::invalid_argument& e) {
+            std::cout << "testRationalIsqrtNegativeNumbers (" << test.numerator << "/" << test.denominator << "): Passed - " << e.what() << std::endl;
+        } catch (...) {
+            std::cout << "testRationalIsqrtNegativeNumbers (" << test.numerator << "/" << test.denominator << "): Failed - Unexpected exception type" << std::endl;
+        }
+    }
+}
+
+
+
+
+
+
+struct TestCase {
+    std::string name;
+    BigInteger number;
+    size_t k;
+    bool expected;
+};
+
+// Функция для сравнения результатов
+bool areEqual(bool a, bool b) {
+    return a == b;
+}
+
+// Функция для запуска тестов деления на простоту
+void testIsPrime() {
+std::vector<TestCase> tests = {
+    // Небольшие простые числа
+    {"Test 1: is_prime(2)", BigInteger("2"), 5, true},
+    {"Test 2: is_prime(3)", BigInteger("3"), 5, true},
+    {"Test 11: is_prime(5)", BigInteger("5"), 5, true},
+    {"Test 12: is_prime(7)", BigInteger("7"), 5, true},
+    {"Test 13: is_prime(11)", BigInteger("11"), 5, true},
+    {"Test 14: is_prime(13)", BigInteger("13"), 5, true},
+    {"Test 15: is_prime(17)", BigInteger("17"), 5, true},
+    {"Test 16: is_prime(19)", BigInteger("19"), 5, true},
+    {"Test 17: is_prime(23)", BigInteger("23"), 5, true},
+    {"Test 18: is_prime(29)", BigInteger("29"), 5, true},
+    {"Test 19: is_prime(31)", BigInteger("31"), 5, true},
+    {"Test 20: is_prime(37)", BigInteger("37"), 5, true},
+    {"Test 21: is_prime(41)", BigInteger("41"), 5, true},
+    {"Test 22: is_prime(43)", BigInteger("43"), 5, true},
+    {"Test 23: is_prime(47)", BigInteger("47"), 5, true},
+    {"Test 24: is_prime(53)", BigInteger("53"), 5, true},
+    {"Test 25: is_prime(59)", BigInteger("59"), 5, true},
+    {"Test 26: is_prime(61)", BigInteger("61"), 5, true},
+    {"Test 27: is_prime(67)", BigInteger("67"), 5, true},
+    {"Test 28: is_prime(71)", BigInteger("71"), 5, true},
+    {"Test 29: is_prime(73)", BigInteger("73"), 5, true},
+    {"Test 30: is_prime(79)", BigInteger("79"), 5, true},
+    {"Test 31: is_prime(83)", BigInteger("83"), 5, true},
+    {"Test 32: is_prime(89)", BigInteger("89"), 5, true},
+    {"Test 33: is_prime(97)", BigInteger("97"), 5, true},
+    {"Test 34: is_prime(101)", BigInteger("101"), 5, true},
+    {"Test 35: is_prime(103)", BigInteger("103"), 5, true},
+    {"Test 36: is_prime(107)", BigInteger("107"), 5, true},
+    {"Test 37: is_prime(109)", BigInteger("109"), 5, true},
+    {"Test 38: is_prime(113)", BigInteger("113"), 5, true},
+    {"Test 39: is_prime(127)", BigInteger("127"), 5, true},
+    {"Test 40: is_prime(131)", BigInteger("131"), 5, true},
+    {"Test 41: is_prime(137)", BigInteger("137"), 5, true},
+    {"Test 42: is_prime(139)", BigInteger("139"), 5, true},
+    {"Test 43: is_prime(149)", BigInteger("149"), 5, true},
+    {"Test 44: is_prime(151)", BigInteger("151"), 5, true},
+    {"Test 45: is_prime(157)", BigInteger("157"), 5, true},
+    {"Test 46: is_prime(163)", BigInteger("163"), 5, true},
+    {"Test 47: is_prime(167)", BigInteger("167"), 5, true},
+    {"Test 48: is_prime(173)", BigInteger("173"), 5, true},
+    {"Test 49: is_prime(179)", BigInteger("179"), 5, true},
+    {"Test 50: is_prime(181)", BigInteger("181"), 5, true},
+    {"Test 51: is_prime(191)", BigInteger("191"), 5, true},
+    {"Test 52: is_prime(193)", BigInteger("193"), 5, true},
+    {"Test 53: is_prime(197)", BigInteger("197"), 5, true},
+    {"Test 54: is_prime(199)", BigInteger("199"), 5, true},
+    {"Test 55: is_prime(211)", BigInteger("211"), 5, true},
+    {"Test 56: is_prime(223)", BigInteger("223"), 5, true},
+    {"Test 57: is_prime(227)", BigInteger("227"), 5, true},
+    {"Test 58: is_prime(229)", BigInteger("229"), 5, true},
+    {"Test 59: is_prime(233)", BigInteger("233"), 5, true},
+    {"Test 60: is_prime(239)", BigInteger("239"), 5, true},
+    {"Test 61: is_prime(241)", BigInteger("241"), 5, true},
+    {"Test 62: is_prime(251)", BigInteger("251"), 5, true},
+    {"Test 63: is_prime(257)", BigInteger("257"), 5, true},
+    {"Test 64: is_prime(263)", BigInteger("263"), 5, true},
+    {"Test 65: is_prime(269)", BigInteger("269"), 5, true},
+    {"Test 66: is_prime(271)", BigInteger("271"), 5, true},
+    {"Test 67: is_prime(277)", BigInteger("277"), 5, true},
+    {"Test 68: is_prime(281)", BigInteger("281"), 5, true},
+    {"Test 69: is_prime(283)", BigInteger("283"), 5, true},
+    {"Test 70: is_prime(293)", BigInteger("293"), 5, true},
+    {"Test 71: is_prime(307)", BigInteger("307"), 5, true},
+    {"Test 72: is_prime(311)", BigInteger("311"), 5, true},
+    {"Test 73: is_prime(313)", BigInteger("313"), 5, true},
+    {"Test 74: is_prime(317)", BigInteger("317"), 5, true},
+    {"Test 75: is_prime(331)", BigInteger("331"), 5, true},
+    {"Test 76: is_prime(337)", BigInteger("337"), 5, true},
+    {"Test 77: is_prime(347)", BigInteger("347"), 5, true},
+    {"Test 78: is_prime(349)", BigInteger("349"), 5, true},
+    {"Test 79: is_prime(353)", BigInteger("353"), 5, true},
+    {"Test 80: is_prime(359)", BigInteger("359"), 5, true},
+    {"Test 81: is_prime(367)", BigInteger("367"), 5, true},
+    {"Test 82: is_prime(373)", BigInteger("373"), 5, true},
+    {"Test 83: is_prime(379)", BigInteger("379"), 5, true},
+    {"Test 84: is_prime(383)", BigInteger("383"), 5, true},
+    {"Test 85: is_prime(389)", BigInteger("389"), 5, true},
+    {"Test 86: is_prime(397)", BigInteger("397"), 5, true},
+    {"Test 87: is_prime(401)", BigInteger("401"), 5, true},
+    {"Test 88: is_prime(409)", BigInteger("409"), 5, true},
+    {"Test 89: is_prime(419)", BigInteger("419"), 5, true},
+    {"Test 90: is_prime(421)", BigInteger("421"), 5, true},
+    {"Test 91: is_prime(431)", BigInteger("431"), 5, true},
+    {"Test 92: is_prime(433)", BigInteger("433"), 5, true},
+    {"Test 93: is_prime(439)", BigInteger("439"), 5, true},
+    {"Test 94: is_prime(443)", BigInteger("443"), 5, true},
+    {"Test 95: is_prime(449)", BigInteger("449"), 5, true},
+    {"Test 96: is_prime(457)", BigInteger("457"), 5, true},
+    {"Test 97: is_prime(461)", BigInteger("461"), 5, true},
+    {"Test 98: is_prime(463)", BigInteger("463"), 5, true},
+    {"Test 99: is_prime(467)", BigInteger("467"), 5, true},
+    {"Test 100: is_prime(479)", BigInteger("479"), 5, true},
+    {"Test 101: is_prime(487)", BigInteger("487"), 5, true},
+    {"Test 102: is_prime(491)", BigInteger("491"), 5, true},
+    {"Test 103: is_prime(499)", BigInteger("499"), 5, true},
+    {"Test 104: is_prime(503)", BigInteger("503"), 5, true},
+    {"Test 105: is_prime(509)", BigInteger("509"), 5, true},
+    {"Test 106: is_prime(521)", BigInteger("521"), 5, true},
+    {"Test 107: is_prime(523)", BigInteger("523"), 5, true},
+    {"Test 108: is_prime(541)", BigInteger("541"), 5, true},
+    
+    // Небольшие составные числа
+    {"Test 3: is_prime(4)", BigInteger("4"), 5, false},
+    {"Test 5: is_prime(6)", BigInteger("6"), 5, false},
+    {"Test 6: is_prime(8)", BigInteger("8"), 5, false},
+    {"Test 7: is_prime(9)", BigInteger("9"), 5, false},
+    {"Test 8: is_prime(10)", BigInteger("10"), 5, false},
+    {"Test 9: is_prime(12)", BigInteger("12"), 5, false},
+    {"Test 10: is_prime(14)", BigInteger("14"), 5, false},
+    {"Test 11: is_prime(15)", BigInteger("15"), 5, false},
+    {"Test 12: is_prime(16)", BigInteger("16"), 5, false},
+    {"Test 13: is_prime(18)", BigInteger("18"), 5, false},
+    {"Test 14: is_prime(20)", BigInteger("20"), 5, false},
+    {"Test 15: is_prime(21)", BigInteger("21"), 5, false},
+    {"Test 16: is_prime(22)", BigInteger("22"), 5, false},
+    {"Test 17: is_prime(24)", BigInteger("24"), 5, false},
+    {"Test 18: is_prime(25)", BigInteger("25"), 5, false},
+    {"Test 19: is_prime(26)", BigInteger("26"), 5, false},
+    {"Test 20: is_prime(27)", BigInteger("27"), 5, false},
+    {"Test 21: is_prime(28)", BigInteger("28"), 5, false},
+    {"Test 22: is_prime(30)", BigInteger("30"), 5, false},
+    {"Test 23: is_prime(32)", BigInteger("32"), 5, false},
+    {"Test 24: is_prime(33)", BigInteger("33"), 5, false},
+    {"Test 25: is_prime(34)", BigInteger("34"), 5, false},
+    {"Test 26: is_prime(35)", BigInteger("35"), 5, false},
+    {"Test 27: is_prime(36)", BigInteger("36"), 5, false},
+    {"Test 28: is_prime(38)", BigInteger("38"), 5, false},
+    {"Test 29: is_prime(39)", BigInteger("39"), 5, false},
+    {"Test 30: is_prime(40)", BigInteger("40"), 5, false},
+    {"Test 31: is_prime(42)", BigInteger("42"), 5, false},
+    {"Test 32: is_prime(44)", BigInteger("44"), 5, false},
+    {"Test 33: is_prime(45)", BigInteger("45"), 5, false},
+    {"Test 34: is_prime(46)", BigInteger("46"), 5, false},
+    {"Test 35: is_prime(48)", BigInteger("48"), 5, false},
+    {"Test 36: is_prime(49)", BigInteger("49"), 5, false},
+    {"Test 37: is_prime(50)", BigInteger("50"), 5, false},
+    {"Test 38: is_prime(51)", BigInteger("51"), 5, false},
+    {"Test 39: is_prime(52)", BigInteger("52"), 5, false},
+    {"Test 40: is_prime(54)", BigInteger("54"), 5, false},
+    {"Test 41: is_prime(55)", BigInteger("55"), 5, false},
+    {"Test 42: is_prime(56)", BigInteger("56"), 5, false},
+    {"Test 43: is_prime(57)", BigInteger("57"), 5, false},
+    {"Test 44: is_prime(58)", BigInteger("58"), 5, false},
+    {"Test 45: is_prime(60)", BigInteger("60"), 5, false},
+    {"Test 46: is_prime(62)", BigInteger("62"), 5, false},
+    {"Test 47: is_prime(63)", BigInteger("63"), 5, false},
+    {"Test 48: is_prime(64)", BigInteger("64"), 5, false},
+    {"Test 49: is_prime(65)", BigInteger("65"), 5, false},
+    {"Test 50: is_prime(66)", BigInteger("66"), 5, false},
+    {"Test 51: is_prime(68)", BigInteger("68"), 5, false},
+    {"Test 52: is_prime(69)", BigInteger("69"), 5, false},
+    {"Test 53: is_prime(70)", BigInteger("70"), 5, false},
+    {"Test 54: is_prime(72)", BigInteger("72"), 5, false},
+    {"Test 55: is_prime(74)", BigInteger("74"), 5, false},
+    {"Test 56: is_prime(75)", BigInteger("75"), 5, false},
+    {"Test 57: is_prime(76)", BigInteger("76"), 5, false},
+    {"Test 58: is_prime(77)", BigInteger("77"), 5, false},
+    {"Test 59: is_prime(78)", BigInteger("78"), 5, false},
+    {"Test 60: is_prime(80)", BigInteger("80"), 5, false},
+    {"Test 61: is_prime(81)", BigInteger("81"), 5, false},
+    {"Test 62: is_prime(82)", BigInteger("82"), 5, false},
+    {"Test 63: is_prime(84)", BigInteger("84"), 5, false},
+    {"Test 64: is_prime(85)", BigInteger("85"), 5, false},
+    {"Test 65: is_prime(86)", BigInteger("86"), 5, false},
+    {"Test 66: is_prime(87)", BigInteger("87"), 5, false},
+    {"Test 67: is_prime(88)", BigInteger("88"), 5, false},
+    {"Test 68: is_prime(90)", BigInteger("90"), 5, false},
+    {"Test 69: is_prime(91)", BigInteger("91"), 5, false},
+    {"Test 70: is_prime(92)", BigInteger("92"), 5, false},
+    {"Test 71: is_prime(93)", BigInteger("93"), 5, false},
+    {"Test 72: is_prime(94)", BigInteger("94"), 5, false},
+    {"Test 73: is_prime(95)", BigInteger("95"), 5, false},
+    {"Test 74: is_prime(96)", BigInteger("96"), 5, false},
+    {"Test 75: is_prime(98)", BigInteger("98"), 5, false},
+    {"Test 76: is_prime(99)", BigInteger("99"), 5, false},
+    {"Test 77: is_prime(100)", BigInteger("100"), 5, false},
+    {"Test 78: is_prime(102)", BigInteger("102"), 5, false},
+    {"Test 79: is_prime(104)", BigInteger("104"), 5, false},
+    
+    // Известные большие простые числа
+    {"Test 106: is_prime(1009)", BigInteger("1009"), 5, true},
+    {"Test 107: is_prime(10007)", BigInteger("10007"), 5, true},
+    {"Test 108: is_prime(10009)", BigInteger("10009"), 5, true},
+    {"Test 109: is_prime(10037)", BigInteger("10037"), 5, true},
+    {"Test 110: is_prime(10039)", BigInteger("10039"), 5, true},
+    {"Test 111: is_prime(10061)", BigInteger("10061"), 5, true},
+    {"Test 112: is_prime(10067)", BigInteger("10067"), 5, true},
+    {"Test 113: is_prime(10069)", BigInteger("10069"), 5, true},
+    {"Test 114: is_prime(10073)", BigInteger("10073"), 5, true},
+    {"Test 115: is_prime(10079)", BigInteger("10079"), 5, true},
+    {"Test 116: is_prime(10091)", BigInteger("10091"), 5, true},
+    {"Test 117: is_prime(10093)", BigInteger("10093"), 5, true},
+    {"Test 118: is_prime(10099)", BigInteger("10099"), 5, true},
+    
+    // Известные составные числа (включая числа-кармичей)
+    {"Test 119: is_prime(561)", BigInteger("561"), 5, false},    // Carmichael number
+    {"Test 120: is_prime(1105)", BigInteger("1105"), 5, false},  // Carmichael number
+    {"Test 121: is_prime(1729)", BigInteger("1729"), 5, false},  // Carmichael number
+    {"Test 122: is_prime(2465)", BigInteger("2465"), 5, false},  // Carmichael number
+    {"Test 123: is_prime(2821)", BigInteger("2821"), 5, false},  // Carmichael number
+    {"Test 124: is_prime(6601)", BigInteger("6601"), 5, false},  // Carmichael number
+    {"Test 125: is_prime(8911)", BigInteger("8911"), 5, false},  // Carmichael number
+    {"Test 126: is_prime(10585)", BigInteger("10585"), 5, false},// Carmichael number
+    {"Test 127: is_prime(15841)", BigInteger("15841"), 5, false},// Carmichael number
+    {"Test 128: is_prime(29341)", BigInteger("29341"), 5, false},// Carmichael number
+    {"Test 129: is_prime(41041)", BigInteger("41041"), 5, false},// Carmichael number
+    {"Test 130: is_prime(46657)", BigInteger("46657"), 5, false},// Carmichael number
+    {"Test 131: is_prime(52633)", BigInteger("52633"), 5, false},// Carmichael number
+    {"Test 132: is_prime(62745)", BigInteger("62745"), 5, false},// Carmichael number
+    {"Test 133: is_prime(63973)", BigInteger("63973"), 5, false},// Carmichael number
+    {"Test 134: is_prime(75361)", BigInteger("75361"), 5, false},// Carmichael number
+    {"Test 135: is_prime(101101)", BigInteger("101101"), 5, false},// Carmichael number
+    {"Test 136: is_prime(115921)", BigInteger("115921"), 5, false},// Carmichael number
+    {"Test 137: is_prime(126217)", BigInteger("126217"), 5, false},// Carmichael number
+    {"Test 138: is_prime(162401)", BigInteger("162401"), 5, false},// Carmichael number
+    {"Test 139: is_prime(172081)", BigInteger("172081"), 5, false},// Carmichael number
+    {"Test 140: is_prime(188461)", BigInteger("188461"), 5, false},// Carmichael number
+    {"Test 141: is_prime(252601)", BigInteger("252601"), 5, false},// Carmichael number
+    {"Test 142: is_prime(278545)", BigInteger("278545"), 5, false},// Carmichael number
+    {"Test 143: is_prime(294409)", BigInteger("294409"), 5, false},// Carmichael number
+    {"Test 144: is_prime(314821)", BigInteger("314821"), 5, false},// Carmichael number
+    {"Test 145: is_prime(334153)", BigInteger("334153"), 5, false},// Carmichael number
+    {"Test 146: is_prime(340561)", BigInteger("340561"), 5, false},// Carmichael number
+    {"Test 147: is_prime(399001)", BigInteger("399001"), 5, false},// Carmichael number
+    {"Test 148: is_prime(410041)", BigInteger("410041"), 5, false},// Carmichael number
+    {"Test 149: is_prime(449065)", BigInteger("449065"), 5, false},// Carmichael number
+    {"Test 150: is_prime(488884324432434234341)", BigInteger("488884324432434234341"), 5, false} // Carmichael number
+};
+
+    for (const auto& test : tests) {
+        bool result = test.number.is_prime(test.k);
+        if (areEqual(result, test.expected)) {
+            std::cout << test.name << ": Passed" << std::endl;
+        } else {
+            std::cout << test.name << ": Failed - Expected: " << std::boolalpha 
+                      << test.expected << ", Got: " << result << std::endl;
+        }
+    }
+}
+
+
+
+
+
+
 int main() {
+        testIsPrime();
+
+
+
+    std::cout << "--------------------------------" << std::endl;
+    std::cout << "Running BigRational isqrt() tests..." << std::endl;
+    std::cout << "--------------------------------" << std::endl;
+
+    testRationalIsqrtZero();
+    testRationalIsqrtOne();
+    testRationalIsqrtPerfectSquares();
+    testRationalIsqrtNonPerfectSquares();
+    testRationalIsqrtNegativeNumbers();
+
+    std::cout << "--------------------------------" << std::endl;
+    std::cout << "All tests completed." << std::endl;
+
+
     testFromInt64Min();
     testFromStringInvalid();
     testFromStringValid();

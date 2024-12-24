@@ -36,7 +36,7 @@ class BigInteger
     friend bool operator<=(const BigInteger &lhs, const BigInteger &rhs);
     friend bool operator>=(const BigInteger &lhs, const BigInteger &rhs);
 
-
+    friend BigInteger power(const BigInteger& base, const BigInteger& pow);
 
 public:
 
@@ -113,7 +113,7 @@ public:
         }
 
         // Save the number in string to the vector
-        for (int i = str.size() - 1; i >= 0; i--) {
+        for (size_t i = str.size(); i-- > 0; ) {
             // skip thw first sign, check if the + or - in the begin of the string
             if ((str[i] == '-' || str[i] == '+') && i == 0)
                 continue;
@@ -562,14 +562,24 @@ BigInteger BigInteger::isqrt() const {
     return out;
 }
 
-bool BigInteger::is_prime(size_t k) const {
-    std::cout << "is_prime \n" << k << std::endl;
-    if (*this < 2) return false;
-    if (*this == 2) return true;
-    if (digits_of_BN.size() == 1 && digits_of_BN[0] % 2 == 0) return false;
-    if (*this == 3) return true;
-    if (*this == 0) return false;
 
+BigInteger power(BigInteger x, BigInteger y, BigInteger p) {
+    BigInteger res = 1;
+    x = x % p;
+    while (y > 0) {
+        if (y % 2 == 1) res = (res * x) % p;
+        y = y / 2;
+        x = (x * x) % p;
+    }
+    return res;
+}
+
+bool BigInteger::is_prime(size_t k) const {
+    // std::cout << "is_prime \n" << k << std::endl;
+    if (*this < 2) return false;
+    if (*this == 2 || *this == 3) return true;
+    if (digits_of_BN.size() == 1 && digits_of_BN[0] % 2 == 0) return false;
+        
     // use rabbin-miller test with k rounds, with the given source
     //https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Miller%E2%80%93Rabin_test
 
@@ -588,24 +598,29 @@ bool BigInteger::is_prime(size_t k) const {
 
     for (size_t i = 0; i < k; i++){
     //     a ← random(2, n − 2)  # n is always a probable prime to base 1 and n − 1
-        //BigInteger a = random_bigint(2, *this - 2);
-        BigInteger a = 2;
-        BigInteger x = a;
+        //BigInteger a = rando(2, *this - 2); 
+        // BigInteger a = 2 * (i + 1); //+ rand() % (n - 2) , for test  2 + (rand() % ( n -2))
+        BigInteger a; //test
+        if (2 * BigInteger(i + 1) < n - 1 ) a = 2 * (i + 1);
+        else a = 2;
+        BigInteger x = power(a, d, *this);
         BigInteger y;
         //     x ← ad mod n   
-        for (size_t t = 1; t < d; t++) {x *= x;}
-            x %= *this;
 
-        std::cout << "x: " << x << std::endl;
+        // BigInteger x = a;
+        // for (size_t t = 1; t < d; t++) {x *= x;}
+        //     x %= *this;
+
+        // std::cout << "x: " << x << std::endl;
 
             //     repeat s times:
-           for (size_t j = 0; j < s ; j++) {
+           for (size_t j = 0; j < s; j++) {
             //         y ← x2 mod n
                y = (x * x) % *this;
 
     //         if y = 1 and x ≠ 1 and x ≠ n − 1 then # nontrivial square root of 1 modulo n
     //             return “composite”
-               if (y == 1 && x != 1 && x != *this - 1) return false;
+               if (y == 1 && x != 1 && x != n) return false;
 
                x = y;
     //         x ← y
@@ -613,7 +628,7 @@ bool BigInteger::is_prime(size_t k) const {
             
  //     if y ≠ 1 then
  //         return “composite”
-        if (x != 1) return false;
+        if (y != 1) return false;
     }
     // return “probably prime”
 
@@ -1100,11 +1115,23 @@ double BigRational::sqrt() const {
 }
 
 BigInteger BigRational::isqrt() const {
-    BigInteger n_isqrt = Numerator.isqrt();
-    BigInteger d_isqrt = Denominator.isqrt();
+    if (first_sign_is_negative_RN && Numerator != 0)
+        throw std::invalid_argument("Negative number");
+
+    BigInteger n_isqrt = Numerator;
+    BigInteger d_isqrt = Denominator;
+
+    n_isqrt -= n_isqrt % d_isqrt;
+
+    // n_isqrt = n_isqrt.isqrt();
+    // d_isqrt = d_isqrt.isqrt();
+
+    if (n_isqrt < d_isqrt) return BigInteger(0);
+    // if (n_isqrt % d_isqrt > d_isqrt / 2) return n_isqrt / d_isqrt - 1;
     BigInteger res = n_isqrt / d_isqrt;
-    
-    return res;
+    // res.normalize();
+
+    return res.isqrt();
 }
 
 inline BigRational operator+(BigRational lhs, const BigRational& rhs) {return lhs += rhs;}
