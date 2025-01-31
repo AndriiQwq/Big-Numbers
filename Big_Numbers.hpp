@@ -1,5 +1,5 @@
 #pragma once
-// here you can include whatever you want :)
+
 #include <string>
 #include <stdint.h>
 #include <iostream>
@@ -11,13 +11,9 @@
 #include <random>
 #include <sstream>
 #include <algorithm>
-// #include <cmath>
 
-// if you do not plan to implement bonus, you can delete those lines
-// or just keep them as is and do not define the macro to 1
 #define SUPPORT_IFSTREAM 1
 #define SUPPORT_MORE_OPS 1
-#define SUPPORT_EVAL 1 // special bonus
 
 class BigInteger
 {
@@ -50,19 +46,15 @@ public:
         
         return result;
     }
-
-    // constructors
-    // BigInteger();
-    // BigInteger(int64_t n);
-    // explicit BigInteger(const std::string& str);
     /**Constructors implementation*/
-    // Single constructor without parameters 
+
+    // Single constructor without parameters is 0 
     BigInteger(){
-        digits_of_BN.push_back(0);
+        digits_of_BN.push_back(0); 
         first_sign_is_negative = false;
     }
 
-    // Constructor with int64_t parameter
+    // Constructor with int64_t parameter, check int min and int max values
     BigInteger(int64_t num){
         if (num == INT64_MIN) {
             std::string min_val = "-9223372036854775808";
@@ -74,7 +66,6 @@ public:
             digits_of_BN.push_back(0);
             first_sign_is_negative = false;
         } else if (num == -0) {
-            // -0 is equal to 0, example: -000 -> 0
             digits_of_BN.push_back(0);
             first_sign_is_negative = false;
         } else {
@@ -84,7 +75,6 @@ public:
             int64_t temp;
             if (first_sign_is_negative) temp = -num;
             else temp = num;
-            // 65304 -> 40356 in vectors
             int base = 10;
             while (temp > 0) {
                 digits_of_BN.push_back(temp % base);
@@ -114,12 +104,10 @@ public:
 
         // Save the number in string to the vector
         for (size_t i = str.size(); i-- > 0; ) {
-            // skip thw first sign, check if the + or - in the begin of the string
             if ((str[i] == '-' || str[i] == '+') && i == 0)
                 continue;
             if (!std::isdigit(str[i]))
                 throw std::invalid_argument("Invalid string, it's not a number or incorrect formated number");
-            // Convers char to int 
             digits_of_BN.push_back(str[i] - '0');
         }
 
@@ -139,7 +127,6 @@ public:
         result.first_sign_is_negative = !result.first_sign_is_negative;
         
         return result;
-        // add -0 check 
     }
     BigInteger operator*() const {return *this;}
 
@@ -151,24 +138,10 @@ public:
         // 3. - + + -> sub +(2) - +(1)
         // 4. - + -
 
-        // check 2 conditions: 
-        // if ( first_sign_is_negative && !rhs.first_sign_is_negative) {
-        //     rhs.first_sign_is_negative = true;
-        //     *this -= rhs;
-        //     return *this;
-        // } else if (!first_sign_is_negative && rhs.first_sign_is_negative) {
-        //     first_sign_is_negativ = true;
-        //     rhs -= *this;
-
-        //     *this = rhs;
-        //     return *this;
-        // // }
-
         if (first_sign_is_negative && !rhs.first_sign_is_negative) {
             // case 3
             first_sign_is_negative = false;
             *this = rhs - *this;
-            //std::cout << "case 3: " << *this << "and " << rhs << std::endl;
             return *this;
         } else if (!first_sign_is_negative && rhs.first_sign_is_negative) {
             // case 2
@@ -194,7 +167,6 @@ public:
         }
 
         normalize();
-
         return *this;
     }
 
@@ -230,9 +202,8 @@ public:
         const BigInteger& larger = this_is_larger ? lhs_num : rhs_num;
         digits_of_BN = larger.digits_of_BN;
         const BigInteger& smaller = this_is_larger ? rhs_num : lhs_num;
-  
-        //https://www.geeksforgeeks.org/bigint-big-integers-in-c-with-example/
-        int base = 10, borrow = 0; // borrow to the next digit
+
+        int base = 10, borrow = 0;
         for (size_t i = 0; i < digits_of_BN.size(); ++i) {
             int s = digits_of_BN[i] - borrow;
             if (i < smaller.digits_of_BN.size())  s -= smaller.digits_of_BN[i];
@@ -249,20 +220,7 @@ public:
     }
 
     BigInteger& operator*=(const BigInteger& rhs){
-        // Implementation of the multiplication
-
-        //error that it chack num 000645453..., and do first case
-        // solve
-        // check neec of normalize
-
-        // if (digits_of_BN[0] == 0 && digits_of_BN.size() != 1) 
-        //     normalize();
-        // else if (rhs.digits_of_BN[0] == 0 && rhs.digits_of_BN.size() == 1)
-        //     normalize();
-        if (digits_of_BN.empty() || rhs.digits_of_BN.empty()) {
-            throw std::invalid_argument("Invalid BigInteger");
-        }  
-    
+        if (digits_of_BN.empty() || rhs.digits_of_BN.empty()) throw std::invalid_argument("Invalid BigInteger");
 
         if (rhs.digits_of_BN[0] == 0 && rhs.digits_of_BN.size() == 1) {
             digits_of_BN.clear();
@@ -285,23 +243,16 @@ public:
             digits_of_BN = rhs.digits_of_BN;
             return *this;
         }
-
-        // Multiplaing the numbers, from the given source 
         
         // Determine the first sign of the result of the multiplication
         bool first_sign_of_multiplication = !(first_sign_is_negative == rhs.first_sign_is_negative);
         
         // Standart base, number of digits in number system 0,1,2...9
         const int base = 10;
-
-        //multiply(a[1..p], b[1..q], base)  // Operands containing rightmost digits at index 1
-        //product = [1..p+q]      // Allocate space for result
         std::vector<uint8_t> product(digits_of_BN.size() + rhs.digits_of_BN.size(), 0);
 
-        //for b_i = 1 to q                     // for all digits in b
         for (size_t i = 0; i < rhs.digits_of_BN.size(); i++) {
             int carry = 0;
-            //for a_i = 1 to p            // for all digits in a
             for ( size_t j = 0; j < digits_of_BN.size(); j++) {
                 int current_product = product[i + j] + carry + digits_of_BN[j] * rhs.digits_of_BN[i];
                 carry = current_product / base;
@@ -310,13 +261,7 @@ public:
 
             if (carry > 0)
                 product[i + digits_of_BN.size()] = carry;
-            // product
-            //     product[a_i + b_i - 1] += carry + a[a_i] * b[b_i] // -1 due to shift 0 index 
-            //     carry = product[a_i + b_i - 1] / base
-            //     product[a_i + b_i - 1] = product[a_i + b_i - 1] mod base
-            //     product[b_i + p] = carry                               // last digit comes from final carry
         }
-        ///return product
 
         first_sign_is_negative = first_sign_of_multiplication;
         digits_of_BN = product;
@@ -326,10 +271,6 @@ public:
     }
     BigInteger& operator/=(const BigInteger& rhs){
         // check normalization 
-        // if (digits_of_BN[0] == 0 && digits_of_BN.size() != 1) 
-        //     normalize();
-        // else if (rhs.digits_of_BN[0] == 0 && rhs.digits_of_BN.size() == 1)
-        //     normalize();
 
         if (rhs.digits_of_BN.size() == 1 && rhs.digits_of_BN[0] == 1 && rhs.first_sign_is_negative == true) {
             first_sign_is_negative = !first_sign_is_negative;
@@ -341,12 +282,7 @@ public:
             throw std::invalid_argument("Division by zero");
 
         if (rhs.digits_of_BN.size() == 1 && rhs.digits_of_BN[0] == 1) {
-            // if (rhs.first_sign_is_negative != first_sign_is_negative){
-            //     *this = -*this;
-            //     return *this;
-            //} else {
-                return *this;
-           // }
+            return *this;
         }
 
 
@@ -356,42 +292,16 @@ public:
             first_sign_is_negative = false;
             return *this;
         } 
-        // else if (digits_of_BN == rhs.digits_of_BN) {
-        //     digits_of_BN.clear();
-        //     digits_of_BN.push_back(1);
-        //     first_sign_is_negative = !(first_sign_is_negative == rhs.first_sign_is_negative);
-        //     return *this;
-        // }
-
 
         bool first_sign_after_dividion = !(first_sign_is_negative == rhs.first_sign_is_negative);
 
         BigInteger dividend = *this;
         BigInteger divisor = rhs;
-        //src:https://en.wikipedia.org/wiki/Division_algorithm
-        //https://stackoverflow.com/questions/27801397/newton-raphson-division-with-big-integers
-
-        // exmpl 
-        // 98765 anf 123
-        // [0 0 8 0 2] and remainder 119/123
-        // 1 stem take form devidend first digit 9, we cnn't devide by 123(ani jeden krat),
-        // go to the next step take second digit whaile we don't be able to devide by 123
-        // take 3r digit -> 987 
-        // 2 step calculate how many times we can devide 987 by 123
-        // 3 step write the result to the product in the right slot [0 0 8
-        // continue 
-        // result 98765/123 = 802, and we don't able to devide whole remainder 65 by 123
 
         BigInteger product;
         product.digits_of_BN.resize(dividend.digits_of_BN.size(), 0);
 
-        BigInteger current; // current is the num that contains the digits, updated after each step,
-        // 9->98->987--->3->36->365--->119 
-        // ---> return processed num by code:  
-            // while (divisor * (x + 1) <= current)x++;
-            //     current = current - divisor * x;
-        // where x is != 0
-
+        BigInteger current; 
         // disable the first sign due to, after compparing the numbers we don't nedd to consider the first sitn 
         dividend.first_sign_is_negative = false;
         divisor.first_sign_is_negative = false;
@@ -399,14 +309,12 @@ public:
             if (current.digits_of_BN.size() == 1 && current.digits_of_BN[0] == 0) current.digits_of_BN.clear();
             current.digits_of_BN.insert(current.digits_of_BN.begin(), dividend.digits_of_BN[i]);
 
-            int x = 0; // x in the scope of 0 to 9
+            int x = 0;
             while (divisor * (x + 1) <= current)x++;
             current = current - divisor * x;
             product.digits_of_BN[i] = x;
-            //std::cout << x << " and " << current << std::endl;
         }
 
-        // don't need to normalize
         product.normalize();
         product.first_sign_is_negative = first_sign_after_dividion;
 
@@ -421,20 +329,16 @@ public:
         if (digits_of_BN.size() < rhs.digits_of_BN.size())
             return *this;
     
-        // Both first signs is the same 
         bool first_sign_after_dividion = first_sign_is_negative;
 
-        // Similar to the division, but return only remainder 
         BigInteger dividend = *this;
         BigInteger divisor = rhs;
-        //Maybe is better don't copy variable, but use *this directly
         BigInteger current; 
         
         // disable the first sign due to, after compparing the numbers we don't nedd to consider the first sitn 
         dividend.first_sign_is_negative = false;
         divisor.first_sign_is_negative = false;
 
-       // bool get_last = false;
         for (int i = dividend.digits_of_BN.size() - 1; i >= 0; --i) {
             if (current.digits_of_BN.size() == 1 && current.digits_of_BN[0] == 0)current.digits_of_BN.clear();//get_last = true;
             current.digits_of_BN.insert(current.digits_of_BN.begin(), dividend.digits_of_BN[i]);
@@ -453,11 +357,6 @@ public:
         return first_sign_is_negative;
     }
 
-    // void set_first_sign_is_negative() {
-    //     if (first_sign_is_negative) first_sign_is_negative = false;
-    //     else first_sign_is_negative = true;
-    // }
-
     double sqrt() const;
 #if SUPPORT_MORE_OPS == 1
     // bonus
@@ -471,17 +370,12 @@ private:
     bool first_sign_is_negative;
 
     static int compare_abs(const BigInteger& lhs, const BigInteger& rhs) {
-        // compare length of the numbers
-        if (lhs.digits_of_BN.size() != rhs.digits_of_BN.size())
-            return lhs.digits_of_BN.size() < rhs.digits_of_BN.size() ? -1 : 1;
-        
-        for (int i = lhs.digits_of_BN.size() - 1; i >= 0; --i) {
-            // step by step compare number signes
-            if (lhs.digits_of_BN[i] != rhs.digits_of_BN[i])
-                return lhs.digits_of_BN[i] < rhs.digits_of_BN[i] ? -1 : 1;
-        }
-        // equal numbers
-        return 0;
+        // compare length 
+        if (lhs.digits_of_BN.size() != rhs.digits_of_BN.size()) return lhs.digits_of_BN.size() < rhs.digits_of_BN.size() ? -1 : 1;
+        // compare number signes
+        for (int i = lhs.digits_of_BN.size() - 1; i >= 0; --i) 
+            if (lhs.digits_of_BN[i] != rhs.digits_of_BN[i]) return lhs.digits_of_BN[i] < rhs.digits_of_BN[i] ? -1 : 1;
+        return 0;// equal numbers
     }
 
     void normalize() {
@@ -506,18 +400,12 @@ double BigInteger::sqrt() const {
         return 1;
     }
 
-    // Newton-Raphson method
-    //https://cp-algorithms.com/num_methods/roots_newton.html?utm_source=chatgpt.com
-    //y^2=n, y0 = n/2, y1 = (y0 + n/y0)/2, y2 = (y1 + n/y1)/2, ...
-
     double n = 0;
     double decade = 1;
     for (size_t i = 0; i < digits_of_BN.size(); ++i) {
         n += digits_of_BN[i] * decade;
         decade *= 10;
     }
-
-    //std::cout << n << '\n';
 
     if (n > std::numeric_limits<double>::max()) throw std::runtime_error("numeric_limits: double max reached");
     double out = n / 2;
@@ -575,17 +463,10 @@ BigInteger power(BigInteger x, BigInteger y, BigInteger p) {
 }
 
 bool BigInteger::is_prime(size_t k) const {
-    // std::cout << "is_prime \n" << k << std::endl;
     if (*this < 2) return false;
     if (*this == 2 || *this == 3) return true;
     if (digits_of_BN.size() == 1 && digits_of_BN[0] % 2 == 0) return false;
         
-    // use rabbin-miller test with k rounds, with the given source
-    //https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Miller%E2%80%93Rabin_test
-
-    //Input #2: k, the number of rounds of testing to perform
-
-    // let s > 0 and d odd > 0 such that n − 1 = 2sd  # by factoring out powers of 2 from n − 1
     size_t s = 0;
 
     BigInteger n = *this - 1;
@@ -597,58 +478,30 @@ bool BigInteger::is_prime(size_t k) const {
     }
 
     for (size_t i = 0; i < k; i++){
-    //     a ← random(2, n − 2)  # n is always a probable prime to base 1 and n − 1
-        //BigInteger a = rando(2, *this - 2); 
-        // BigInteger a = 2 * (i + 1); //+ rand() % (n - 2) , for test  2 + (rand() % ( n -2))
-        BigInteger a; //test
+        BigInteger a; 
         if (2 * BigInteger(i + 1) < n - 1 ) a = 2 * (i + 1);
         else a = 2;
         BigInteger x = power(a, d, *this);
         BigInteger y;
-        //     x ← ad mod n   
-
-        // BigInteger x = a;
-        // for (size_t t = 1; t < d; t++) {x *= x;}
-        //     x %= *this;
-
-        // std::cout << "x: " << x << std::endl;
-
-            //     repeat s times:
            for (size_t j = 0; j < s; j++) {
-            //         y ← x2 mod n
                y = (x * x) % *this;
-
-    //         if y = 1 and x ≠ 1 and x ≠ n − 1 then # nontrivial square root of 1 modulo n
-    //             return “composite”
                if (y == 1 && x != 1 && x != n) return false;
 
                x = y;
-    //         x ← y
            }
             
- //     if y ≠ 1 then
- //         return “composite”
         if (y != 1) return false;
     }
-    // return “probably prime”
 
-
-    return true; //Output: “composite” if n is found to be composite, “probably prime” otherwise
+    return true;
 }
 
 inline std::ostream &operator<<(std::ostream &lhs, const BigInteger &rhs) {
     if (rhs.first_sign_is_negative && rhs != 0) lhs << '-';
-    // else {
-    //     lhs << '+';//???
-    // }
 
-    // rbegin form the end, rend iterator to the begin
-    //https://www.geeksforgeeks.org/vector-rbegin-and-rend-function-in-c-stl/
-    //https://en.cppreference.com/w/cpp/iterator/rbegin
     for (auto it = rhs.digits_of_BN.rbegin(); it != rhs.digits_of_BN.rend(); ++it)
-        lhs << static_cast<char>(*it + '0'); // get number -> char -> add to stream
+        lhs << static_cast<char>(*it + '0');
 
-  //lhs << rhs.to_string();
   return lhs;
 }
 
@@ -694,9 +547,6 @@ inline bool operator==(const BigInteger& lhs, const BigInteger& rhs){
     if (lhs.digits_of_BN.size() != rhs.digits_of_BN.size())
         return false;
 
-    // for (size_t i = 0; i < lhs.digits_of_BN.size(); i++)
-    //     if (lhs.digits_of_BN[i] != rhs.digits_of_BN[i])
-    //         return false;
     return lhs.digits_of_BN == rhs.digits_of_BN;
 }
 
@@ -705,9 +555,6 @@ inline bool operator!=(const BigInteger& lhs, const BigInteger& rhs) {
 }
 
 inline bool operator<(const BigInteger& lhs, const BigInteger& rhs) {
-
-   // std::cout << "lhs: " << lhs << " and rhs: " << rhs << "|"<< lhs.first_sign_is_negative << " and " << rhs.first_sign_is_negative << std::endl;
-
     if (lhs.first_sign_is_negative && !rhs.first_sign_is_negative)
         return true;
     else if (!lhs.first_sign_is_negative && rhs.first_sign_is_negative)
@@ -752,53 +599,11 @@ inline bool operator>=(const BigInteger& lhs, const BigInteger& rhs) {
 
 
 #if SUPPORT_IFSTREAM == 1
-// this should behave exactly the same as reading int with respect to 
-// whitespace, consumed characters etc...
 // bonus
 inline std::istream& operator>>(std::istream& lhs, BigInteger& rhs) {
     std::string input;
+
     lhs >> input;
-
-    if (input.empty() || (input.size() == 1 && (input[0] == '-' || input[0] == '+'))) {
-        lhs.setstate(std::ios::failbit);
-        return lhs;
-    }
-
-    //remove whitespaces, and normalize
-    for (size_t i = 0; i < input.size(); ++i) {
-        if ( input[i] == '+' || input[i] == '-') {
-            if (i != 0) {
-                lhs.setstate(std::ios::failbit);
-                return lhs;
-            } else continue;
-        }
-      
-        if (input[i] == ' ') {
-            input.erase(i, 1);
-            --i;
-            continue;
-        }
-
-        if (input[i] < '0' || input[i] > '9') {
-            lhs.setstate(std::ios::failbit);
-            //std::cout << "failbit" << '\n';
-            return lhs;
-        }
-    }
-
-    while (input.size() > 1 && input[0] == '0')
-        input.erase(0, 1);
-
-    if (input == "-0")
-        input = "0";
-
-    if (input.empty() || (input.size() == 1 && (input[0] == '-' || input[0] == '+'))) {
-        lhs.setstate(std::ios::failbit);
-        return lhs;
-    }
-
-    //std::cout << "input_size: " << input.size() << '\n';
-
     try {
         rhs = BigInteger(input);
     } catch (const std::invalid_argument &e) {
@@ -806,6 +611,7 @@ inline std::istream& operator>>(std::istream& lhs, BigInteger& rhs) {
     }
     return lhs;
 }
+
 #endif
 
 /** Rational part*/
@@ -844,15 +650,6 @@ public:
         } catch (const std::invalid_argument &e) {
             throw std::invalid_argument("Invalid BigRational");
         }
-        // Numerator = a;
-        // Denominator = b;
-
-        // if (a == 0 && b == 0) {
-        //     first_sign_is_negative_RN = false;
-        // }else {
-        //     if (Numerator < 0) first_sign_is_negative_RN = true;
-        //     else first_sign_is_negative_RN = false;
-        // }
 
         if (Numerator == 0) {
             first_sign_is_negative_RN = false;
@@ -864,12 +661,8 @@ public:
             }
             first_sign_is_negative_RN = (Numerator < 0);
         }
-
-        ///std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
         
         normalize();
-                //std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
-
     }
     // constructor with str parameters
     BigRational(const std::string& a, const std::string& b) {
@@ -884,7 +677,6 @@ public:
         if (Numerator.get_first_sign() == true){first_sign_is_negative_RN = true;
         } else {first_sign_is_negative_RN = false;}
         normalize();
-        //std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
     }
 
     // copy
@@ -896,7 +688,6 @@ public:
         BigRational res = *this;
         res.first_sign_is_negative_RN = !res.first_sign_is_negative_RN;
         res.Numerator = -res.Numerator;
-        // res.Numerator.set_first_sign_is_negative();
         return res;
     }
     // binary arithmetics operators
@@ -909,15 +700,11 @@ public:
 
         if (first_sign_is_negative_RN && !rhs.first_sign_is_negative_RN) {
             // case 3
-            /// std::cout << "case 3!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-
             BigRational temp_rhs = rhs;
             BigRational temp_this = *this;
             temp_this.first_sign_is_negative_RN = false; // temp_this -> +
-            /// !!!
             temp_this.Numerator = -temp_this.Numerator;
             
-            //first_sign_is_negative_RN = false;
             *this = temp_rhs - temp_this;
             return *this;
         } else if (!first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
@@ -929,35 +716,13 @@ public:
         // num have the same signs, + + + or - + - -> addition
         if (Denominator != rhs.Denominator){
             //find NSD
-            // BigInteger bigger_denominator;
-            // BigInteger smaller_denominator;
-
-            // if (Denominator > rhs.Denominator) {
-            //     bigger_denominator = Denominator;
-            //     smaller_denominator = rhs.Denominator;
-            // } else {
-            //     bigger_denominator = rhs.Denominator;
-            //     smaller_denominator = Denominator;
-            // }
-
-            // BigInteger nsd = find_nsd(bigger_denominator, smaller_denominator); 
-            // BigInteger nok = (bigger_denominator * smaller_denominator) / nsd;
             BigInteger nsd = find_nsd(Denominator, rhs.Denominator);
             BigInteger nok = (Denominator * rhs.Denominator) / nsd;
             Numerator = (Numerator * (nok / Denominator)) + (rhs.Numerator * (nok / rhs.Denominator));
-
-            // std::cout << "NOK: " << nok << " and NSD: " << nsd << std::endl;
-            // std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
-            // std::cout << "rhs.Numerator: " << rhs.Numerator << " and rhs.Denominator: " << rhs.Denominator << std::endl;
-            //Numerator = (Numerator * (nok / Denominator)) + (rhs.Numerator * (nok / rhs.Denominator));
-            // if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
-            //     Denominator = -nok;
-            // } else {Denominator = nok;}
             Denominator = nok;
 
         } else {Numerator += rhs.Numerator;}
 
-        //std::cout << "result: " << *this <<  " and " <<  first_sign_is_negative_RN << std::endl;
         normalize();
 
         return *this;
@@ -975,49 +740,26 @@ public:
             return *this;
         } else if (first_sign_is_negative_RN && !rhs.first_sign_is_negative_RN) {
             // case 3
-           // std::cout << "case 3!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
             *this += -rhs;
             return *this;
         } else if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
             // case 4
             BigRational temp_rhs = rhs;
             BigRational temp_this = *this;
-            temp_rhs.first_sign_is_negative_RN = false; // temp_this -> +
+            temp_rhs.first_sign_is_negative_RN = false;
             temp_rhs.Numerator = -temp_rhs.Numerator;
 
             *this = temp_rhs + temp_this;
 
-            //             first_sign_is_negative = false;
-            // *this = -rhs - *this;
-            // return *this;
             return *this;
         }
 
         // num have the same signs, + - + -> substraction
         if (Denominator != rhs.Denominator){
             //find NSD
-        //     BigInteger bigger_denominator;
-        //     BigInteger smaller_denominator;
-
-        //     if (Denominator > rhs.Denominator) {
-        //         bigger_denominator = Denominator;
-        //         smaller_denominator = rhs.Denominator;
-        //     } else {
-        //         bigger_denominator = rhs.Denominator;
-        //         smaller_denominator = Denominator
-        //     // // upadate the first sign statatment 
-
-
-            //std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
-
             BigInteger nsd = find_nsd(Denominator, rhs.Denominator);
             BigInteger nok = (Denominator * rhs.Denominator) / nsd;
             Numerator = (Numerator * (nok / Denominator)) - (rhs.Numerator * (nok / rhs.Denominator));
-
-            // if ( first_sign_is_negative_RN && rhs.first_sign_is_negative_RN) {
-            //     Denominator = -nok;
-            // } else {Denominator = nok;}
-
             Denominator = nok;
             
         } else {
@@ -1065,21 +807,12 @@ private:
     }
 
     void normalize() {
-        // if need that normalize the number, -42/21 -> -2/1 -> -2
-
         if (Denominator == 0)  throw std::invalid_argument("Denominator can't be 0");
         if (Numerator == 0) {
             Denominator = 1;
             first_sign_is_negative_RN = false;
         }
 
-        // if (Numerator == Denominator) {
-        //     Numerator = 1;
-        //     Denominator = 1;
-        // } else if (Numerator == -Denominator) {
-        //     Numerator = -1;
-        //     Denominator = 1;
-        // }
         if (Denominator == 1) return;
 
         BigInteger nsd = find_nsd(Numerator, Denominator);
@@ -1091,18 +824,6 @@ private:
             Numerator = -Numerator;
             Denominator = -Denominator;
         }
-        
-
-        // while (true) {
-        //     // While we can devide two part by NSD 
-        //     BigInteger nsd = find_nsd(Numerator, Denominator);
-        //     if (nsd != 1) { // can't to devide each more
-        //         Numerator = Numerator / nsd;
-        //         Denominator = Denominator / nsd;
-        //     } else {
-        //         break;
-        //     }
-        // }
     }
 };
 
@@ -1123,13 +844,8 @@ BigInteger BigRational::isqrt() const {
 
     n_isqrt -= n_isqrt % d_isqrt;
 
-    // n_isqrt = n_isqrt.isqrt();
-    // d_isqrt = d_isqrt.isqrt();
-
     if (n_isqrt < d_isqrt) return BigInteger(0);
-    // if (n_isqrt % d_isqrt > d_isqrt / 2) return n_isqrt / d_isqrt - 1;
     BigInteger res = n_isqrt / d_isqrt;
-    // res.normalize();
 
     return res.isqrt();
 }
@@ -1147,29 +863,7 @@ inline bool operator==(const BigRational& lhs, const BigRational& rhs) {
     else return false;
 }
 inline bool operator!=(const BigRational& lhs, const BigRational& rhs) { return !(lhs == rhs); }
-//https://www.youtube.com/watch?v=uy-pGMtIJeY
 inline bool operator<(const BigRational& lhs, const BigRational& rhs) {return (lhs.Numerator * rhs.Denominator) < (rhs.Numerator * lhs.Denominator);}
-//inline bool operator<(const BigRational& lhs, const BigRational& rhs) { 
-    //if ((lhs.Numerator / lhs.Denominator) < (rhs.Numerator / rhs.Denominator))
-    //     return true;
-    // else if ((lhs.Numerator / lhs.Denominator) > (rhs.Numerator / rhs.Denominator)){
-    //     std::cout << lhs.first_sign_is_negative_RN << rhs.first_sign_is_negative_RN << std::endl;
-    //     return false;
-    // }
-    // else if ((lhs.Numerator / lhs.Denominator) == (rhs.Numerator / rhs.Denominator)) {
-    //     std::cout << lhs.first_sign_is_negative_RN << rhs.first_sign_is_negative_RN << std::endl;
-    //     if (lhs.first_sign_is_negative_RN && !rhs.first_sign_is_negative_RN)
-    //         return true;
-    //     else if (!lhs.first_sign_is_negative_RN && rhs.first_sign_is_negative_RN)
-    //         return false;
-    //     else i
-    //     } else {
-    //         if 
-    //     }
-    // }
-    
-    //std::cout << "lhs: " << lhs << " and rhs: " << rhs << "|"<< lhs.first_sign_is_negative_RN << " and " << rhs.first_sign_is_negative_RN << std::endl;
-    
 
 inline bool operator>(const BigRational& lhs, const BigRational& rhs) {
     if (lhs < rhs || lhs == rhs)return false;
@@ -1185,8 +879,6 @@ inline bool operator>=(const BigRational& lhs, const BigRational& rhs) {
 }
 
 inline std::ostream& operator<<(std::ostream& lhs, const BigRational& rhs) {
-    //if ( rhs.Numerator == 0 && rhs.Numerator.
-    // normalize();
     if (rhs.Denominator == BigInteger(1)) lhs << rhs.Numerator;
     else if (rhs.Numerator == BigInteger(0)) lhs << 0;
     else lhs << rhs.Numerator << '/' << rhs.Denominator;
@@ -1200,77 +892,38 @@ inline std::ostream& operator<<(std::ostream& lhs, const BigRational& rhs) {
 // bonus
 inline std::istream& operator>>(std::istream& lhs, BigRational& rhs) {
     std::string input;
-    std::getline(lhs, input);
+    lhs >> input;
 
     std::string Numerator;
     std::string Denominator;
 
-    input.erase(std::remove_if(input.begin(), input.end(), ::isspace), input.end());
+    size_t it = 0; // remove whitespaces in begin
+    while (it < input.size() && std::isspace(static_cast<unsigned char>(input[it])))
+        ++it;
 
     if (input.empty()) {
         lhs.setstate(std::ios::failbit);
         return lhs;
     }
 
-    //std::cout << "input: " << input << std::endl;
-
-    for (size_t i = 0; i < input.size(); ++i) {
-        if (input[i] == '+' || input[i] == '-') {
-            if (i != 0) { /// + hcekc 
-                if (input[i-1] == '/') {
-                    continue;
-                } else {
-                    lhs.setstate(std::ios::failbit);
-                    return lhs;
-                }
-            } else continue;
+    size_t find_slesh_sign = input.find('/');
+    if (find_slesh_sign == std::string::npos) {
+        try {
+            size_t find_first_whitespaces = input.find(' ');
+            if (find_first_whitespaces != std::string::npos) {
+                Numerator = input.substr(it, find_first_whitespaces);
+                Denominator = "1";
+            } else {
+                Numerator = input;
+                Denominator = "1";
+            }
+        } catch (const std::invalid_argument &e) {
+            lhs.setstate(std::ios::failbit);
         }
-
-        // if (input[i] == ' ') {
-        //     input.erase(i, 1);
-        //     --i;
-        //     continue;
-        // }
-
-        if (input[i] == '/') {
-            Numerator = input.substr(0, i);
-            Denominator = input.substr(i + 1);
-            break;
-        }
-
-        if (input[i] < '0' || input[i] > '9') {
-            Numerator = input.substr(0, i);
-            Denominator = "1";
-            break;
-        }
+    } else{
+        Numerator = input.substr(0, find_slesh_sign);
+        Denominator = input.substr(find_slesh_sign + 1);
     }
-
-    // if input "123"??? -> 123/1??? or set failbit???
-
-    // if (!Numerator.empty() && Denominator.empty()) {
-    //     Denominator = "1";
-    //     std::cout << "!!!!!!!!!!!!!!!!Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
-    // }
-
-    //std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
-
-    if (Numerator.empty() || Denominator.empty()) {
-        lhs.setstate(std::ios::failbit);
-        return lhs;
-    } 
-
-    if (Numerator.size() == 1 && (Numerator[0] == '-' || Numerator[0] == '+')) {
-        lhs.setstate(std::ios::failbit);
-        return lhs;
-    } else if (Denominator.size() == 1 && (Denominator[0] == '-' || Denominator[0] == '+')) {
-        lhs.setstate(std::ios::failbit);
-        return lhs;
-    }
-
-    if (Numerator == "-0") Numerator = "0";
-    if (Denominator == "-0") Denominator = "0";
-    
-    //std::cout << "Numerator: " << Numerator << " and Denominator: " << Denominator << std::endl;
 
     try {
         rhs = BigRational(Numerator, Denominator);
@@ -1280,431 +933,4 @@ inline std::istream& operator>>(std::istream& lhs, BigRational& rhs) {
 
     return lhs;
 } 
-#endif
-
-#if SUPPORT_EVAL == 1
-inline BigInteger eval(const std::string& const_input) {
-    // parse file string 
-
-    // std::cout << "input: " << const_input << std::endl;
-
-    std::string input = const_input;
-    input.erase(std::remove(input.begin(), input.end(), ' '), input.end());
-
-    BigInteger result = 0;
-
-    std::string temp_sign;
-    std::string temp_substring;
-    std::string temp_num;
-    std::string temp_result;
-
-    int it = 0; 
-    bool get_chenge = false;
-    bool stop_condition = false;
-    bool waite_end_or_begin_of_breckets = false;
-
-    // bool is_negative = false;
-    while (!stop_condition) {
-
-        for(char ch : input){
-            bool add_to_num = false;
-            it++;
-            if (ch == ' ') continue;
-
-            if (waite_end_or_begin_of_breckets) {
-                if (ch == '{') {
-                    waite_end_or_begin_of_breckets = false;
-                    continue;
-                } else if (ch == '}'){
-                    bool skip = false;
-                    for(char ch : temp_substring){
-                        // find first ',' and skip it
-                        if (ch == ',') {
-                            skip = true;
-                            continue;
-                        }
-
-                        if (skip) {
-                            if (ch == ' ') continue;
-                            if ( ch == '-') temp_num += ch;
-                            if (ch >= '0' && ch <= '9') temp_num += ch;
-                            if ( ch == '.') break;
-                            if ( ch == ',') break;
-                        }
-                    }
-
-                    temp_result += temp_num;
-                    stop_condition = true;
-                    break;
-                }else {
-                    continue;
-                }
-            }
-
-            // control the sign of the number 
-            if (ch == '+' || ch == '-') {
-                //check if ch+1 is a number
-                if (input[it+1] >= '0' && input[it+1] <= '9') {
-                    // is_negative = true;
-                    continue;
-                }
-            }
-
-            if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
-                temp_sign = ch;
-                add_to_num = true;
-            }
-
-            if (add_to_num) {
-                // add to num
-                
-                //scan left and right side of the num, + 2 to skip " and , signs
-                temp_substring = input.substr(it + 2, input.size());
-                // std::cout << "temp_substring: " << temp_substring << std::endl;
-
-                //get left num 
-                for(char ch : temp_substring){
-                    if (ch == ' ') continue;
-                    // check num sign, is it negative
-                    if ( ch == '-') temp_num += ch;
-                    // check num sign 
-                    if (ch >= '0' && ch <= '9') temp_num += ch;
-                    if ( ch == '.') break;
-                    
-                    if ( ch == ',') break;
-                }
-                temp_result += temp_num;
-                temp_num.clear();
-
-                // if (is_negative){
-                //     temp_result = "-" + temp_result;
-                //     is_negative = false;
-                // } 
-                temp_result += temp_sign;
-                // std::cout << "temp_result: " << temp_result << std::endl;
-
-                get_chenge = true;
-            }       
-
-            if (get_chenge) {
-                input = temp_substring;
-                get_chenge = false;
-                waite_end_or_begin_of_breckets = true;
-            }
-        }
-    }
-
-    //  std::cout << "temp_result: " << temp_result << std::endl;
-
-    //process the result 
-    // "123+12345678901234567890*34%1" -> 123
-
-    stop_condition = false;
-    std::string left;
-    std::string right;
-    while (!stop_condition) {
-        // std::cout << "START WIHT temp_result: " << temp_result << std::endl;
-        bool skip_add_sub = false;
-
-        for(char ch : temp_result){
-            std::string left_num = "", right_num = "";
-
-            if (ch == ' ') continue;
-            if (ch == '*' || ch == '/' || ch == '%') {
-                // std::cout << "temp_result: " << temp_result << std::endl;
-                // std::cout << "ch: " << ch
-
-                //get left num
-                left = temp_result.substr(0, temp_result.find(ch));
-                // std::cout << "left: " << left << std::endl;
-                right = temp_result.substr(temp_result.find(ch) + 1, temp_result.size());
-                // std::cout << "right: " << right << std::endl;
-
-                //get left num, and delete it from the string
-                for (auto it = left.rbegin(); it != left.rend(); ++it) {
-                    char ch = *it;
-                    if (ch >= '0' && ch <= '9') left_num = ch + left_num;
-                    else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
-                        left.erase(left.size() - left_num.size(), left_num.size());
-                        break;
-                    }
-                    // else if (ch == '-') { 
-                    //     // This is begin of the string 
-                    //     // if (it.base() == left.begin()) {
-                    //     //     left_num = ch + left_num;
-                    //     //     left.erase(left.size() - left_num.size(), left_num.size());
-                    //     //     break;
-                    //     // }
-                    //     // Check if there is no other operator after '-'
-                    //     // auto next_it = it + 1;
-                    //     // if (next_it != left.rend() && *next_it != '+' && *next_it != '-' && *next_it != '*' && *next_it != '/' && *next_it != '%') {
-                    //     //     // left_num = ch + left_num;
-                    //     //     left.erase(left.size() - left_num.size(), left_num.size());
-                    //     //     break;
-                    //     // } else {
-                    //     //     left_num = ch + left_num;
-                    //     //     left.erase(left.size() - left_num.size(), left_num.size());
-                    //     // }
-                    // }
-                }
-
-                if (!left.empty() && left.size() > 1) {
-                    if (left.back() == '-' && !(left[left.size() - 2] != '+' && left[left.size() - 2] != '-' && left[left.size() - 2] != '*' && left[left.size() - 2] != '/' && left[left.size() - 2] != '%')) {
-                        left.erase(left.size() - 1, 1);
-                        left_num = "-" + left_num;
-                    }
-                }
-
-                // std::cout << "leftnum: " << left_num << std::endl;
-                // std::cout << "left: " << left << std::endl;
-
-                //get right num, and delete it from the string
-                //First check if first char is a '-' sign
-                if (!right.empty() && right[0] == '-') {
-                    if (right.size() > 1 && (right[1] >= '0' && right[1] <= '9')) {
-                        right_num = "-";
-                        right.erase(0, 1);
-                    }
-
-                    for (char ch : right) {
-                        if (ch >= '0' && ch <= '9') right_num += ch;
-                        if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
-                            right.erase(0, right_num.size() - 1);
-                            break;
-                        }
-                    }
-                } else{
-                    for (char ch : right) {
-                        if (ch >= '0' && ch <= '9') right_num += ch;
-                        if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
-                            right.erase(0, right_num.size());
-                            break;
-                        }
-                    }
-                }
-
-
-
-                // std::cout << "left: " << left << std::endl;
-                // std::cout << "right: " << right << std::endl;
-
-                // std::cout << "left_num: " << left_num << std::endl;
-                // std::cout << "right_num: " << right_num << std::endl;
-
-                //process the result
-                if (ch == '*') {
-                    result = BigInteger(left_num) * BigInteger(right_num);
-                } else if (ch == '/') {
-                    result = BigInteger(left_num) / BigInteger(right_num);
-                } else if (ch == '%') {
-                    result = BigInteger(left_num) % BigInteger(right_num);
-                }
-                // std::cout << "result: " << result << std::endl;
-                // std::cout << "temp_result: " << result.to_string() << std::endl;
-
-                // check if left side has a +, -, *, /, %,
-                bool left_has_sign = false;
-                for(auto it = left.rbegin(); it != left.rend(); ++it) {
-                    char ch = *it;
-                    if (ch == '+' || ch == '*' || ch == '/' || ch == '%') {
-                        left_has_sign = true;
-                        break;
-                    }
-                    if (ch == '-') {
-                        //check if it end of the string
-                        if (it.base() == right.begin()) {
-                            break;
-                        } else {
-                            left_has_sign = true;
-                            break;
-                        }
-                    }
-                }
-
-                bool right_has_sign = false;
-                for(char ch : right) {
-                    if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
-                        right_has_sign = true;
-                        break;
-                    }
-                }
-                // std::cout << "DEBUG INFO" << std::endl;
-                // std::cout << "left_has_sign: " << left_has_sign << std::endl;
-                // std::cout << "right_has_sign: " << right_has_sign << std::endl;
-
-                if (left_has_sign && right_has_sign) {
-                    temp_result = left + result.to_string() + right;
-                } else if (left_has_sign && !right_has_sign) {
-                    temp_result = left + result.to_string();
-                    // std::cout << "NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWtemp_result: " << temp_result << std::endl;
-                } else if (!left_has_sign && right_has_sign) {
-                    temp_result = result.to_string() + right;
-                } else if (!left_has_sign && !right_has_sign) {
-                    stop_condition = true;
-                    break;
-                }            
-                
-                // std::cout << "!!!!!!!!!!temp_result: " << temp_result << std::endl;
-                skip_add_sub = true;
-            }
-
-            // // check end of the string
-            // if (ch == '\0') {
-            //     stop_condition = true;
-            //     break;
-            // }
-        }
-        if (skip_add_sub) continue;
-
-        for (size_t d = 0; d < temp_result.size(); d++) {
-            char ch = temp_result[d];
-            std::string left_num = "", right_num = "";
-
-            if (ch == ' ') 
-                continue;
-            
-            // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
-            // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
-            // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
-            // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
-            // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
-            // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
-
-
-
-            if (ch == '-'){
-                // // if next ch + 1 is a number
-                // if (i + 1 < temp_result.size() && (temp_result[i + 1] >= '0' && temp_result[i + 1] <= '9')) {
-                //     std::cout << "fdfdf" << std::endl;
-                //     continue;
-                // }
-                
-                // if isthe begin of the string
-                // std::cout << "temp_resdfsdssult: " << temp_result << d << std::endl;
-                if (d == 0) { 
-                    // std::cout << "begin of the string" << std::endl;
-                    continue;
-                }
-            }
-
-            if (ch == '+' || ch == '-') {
-                //get left num
-                left = temp_result.substr(0, d);
-                right = temp_result.substr(d + 1);
-                // std::cout << "right: " << right << std::endl;
-
-
-                // std::cout << "1righ:"<< right << std::endl;
-                // std::cout << "1lest: " << left << std::endl;
-                // std::cout << "1left_num: " << left_num << std::endl;
-                // std::cout << "1right_num: " << right_num << std::endl;
-
-                //get left num, and delete it from the string
-                for (auto it = left.rbegin(); it != left.rend(); ++it) {
-                    char ch = *it;
-                    if (ch >= '0' && ch <= '9') left_num = ch + left_num;
-                    else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
-                        left.erase(left.size() - left_num.size(), left_num.size());
-                        break;
-                    }
-                }
-
-                if (!left.empty() && left.back() == '-') {
-                    left.erase(left.size() - 1, 1);
-                    left_num = "-" + left_num;
-                }
-
-                // std::cout << "2righ:"<< right << std::endl;
-                // std::cout << "2lest: " << left << std::endl;
-                // std::cout << "2left_num: " << left_num << std::endl;
-                // std::cout << "2right_num: " << right_num << std::endl;
-
-                if (!right.empty() && right[0] == '-') {
-                    if (right.size() > 1 && (right[1] >= '0' && right[1] <= '9')) {
-                        right_num = "-";
-                        right.erase(0, 1);
-                    }
-
-                    for (char ch : right) {
-                        if (ch >= '0' && ch <= '9') right_num += ch;
-                        if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
-                            right.erase(0, right_num.size() - 1);
-                            break;
-                        }
-                    }
-                } else{
-                    for (char ch : right) {
-                        if (ch >= '0' && ch <= '9') right_num += ch;
-                        if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
-                            right.erase(0, right_num.size());
-                            break;
-                        }
-                    }
-                }
-
-                // std::cout << "3Debug: left: " << left << std::endl;
-                // std::cout << "3Debug: right: " << right << std::endl;
-                // std::cout << "3Debug: left_num: " << left_num << std::endl;
-                // std::cout << "3Debug: right_num: " << right_num << std::endl;
-
-                //process the result
-                if (ch == '+') {
-                    result = BigInteger(left_num) + BigInteger(right_num);
-                } else if (ch == '-') {
-                    result = BigInteger(left_num) - BigInteger(right_num);
-                }
-
-                // std::cout << "Debug: " << result;
-
-                // check if left side has a +, -, *, /, %,
-                bool left_has_sign = false;
-                for(auto it = left.rbegin(); it != left.rend(); ++it) {
-                    char ch = *it;
-                    if (ch == '+' || ch == '*' || ch == '/' || ch == '%') {
-                        left_has_sign = true;
-                        break;
-                    }
-                    if (ch == '-') {
-                        //check if it end of the string
-                        if (it.base() == right.begin()) {
-                            break;
-                        } else {
-                            left_has_sign = true;
-                            break;
-                        }
-                    }
-                }
-
-                bool right_has_sign = false;
-                for(char ch : right) {
-                    if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') {
-                        right_has_sign = true;
-                        break;
-                    }
-                }
-
-                // std::cout << "DEBUG INFO" << std::endl;
-                // std::cout << "left_has_sign: " << left_has_sign << std::endl;
-                // std::cout << "right_has_sign: " << right_has_sign << std::endl;
-
-                if (left_has_sign && right_has_sign) {
-                    temp_result = left + result.to_string() + right;
-                } else if (left_has_sign && !right_has_sign) {
-                    temp_result = left + result.to_string();
-                } else if (!left_has_sign && right_has_sign) {
-                    temp_result = result.to_string() + right;
-                } else if (!left_has_sign && !right_has_sign) {
-                    stop_condition = true;
-                    break;
-                }            
-                // std::cout << "!!!!!!!!!!temp_result222222222222: " << temp_result << std::endl;
-            }
-        }
-    } 
-
-    // std::cout << "!!!!!OUT::::result: " << result << std::endl;
-
-
-    return result;  
-}
 #endif
